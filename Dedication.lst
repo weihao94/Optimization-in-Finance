@@ -1,4 +1,4 @@
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 1
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 1
 Dedication models
 C o m p i l a t i o n
 
@@ -47,9 +47,11 @@ C o m p i l a t i o n
   43   
   44  * Bond data. Prices, coupons and maturities from the Danish market
   45   
-INCLUDE    C:\Users\khoongwh\Documents\gamsdir\projdir\Bonds.inc
+INCLUDE    C:\Users\Leonard Lee\OneDrive\Documents\University Files\Core Modules
+           \Math & Stats Modules\Year 3\Sem 1(SEP)\Optimization in Finance\Proje
+           ct\BondData.inc
   47  TABLE BondData(i,*)
-  48                            Price       Maturity      Coupon
+  48                            Price        Maturity      Coupon
   49          DK0009923641      102.35       2020          0.25
   50          DK0009923484      101.02       2018          0.25
   51          DK0009921942      100.61       2017          4
@@ -140,71 +142,206 @@ INCLUDE    C:\Users\khoongwh\Documents\gamsdir\projdir\Bonds.inc
  131  DISPLAY v0.l, borrow.l, surplus.l, x.l;
  132   
  133   
- 134  b0 = v0.l;
+ 134   
  135   
- 136  SOLVE Dedication2 MAXIMIZING VplusFinal USING LP;
- 137  DISPLAY VplusFinal.l, borrow.l, surplus.l, x.l;
- 138   
- 139  * Simulation for different values of the reinvestment rate rf
- 140   
- 141  SCALAR
- 142     ReinvRate reinvestment rate
- 143     SPR Spread;
- 144   
- 145  FILE DedicationHandle /"DedicationPortfolios.csv"/;
- 146   
- 147  DedicationHandle.pc = 5;
- 148   
- 149  PUT DedicationHandle;
- 150   
- 151   
- 152   
- 153  FOR ( ReinvRate = -0.04 to 0.02 by 0.005,
- 154   
- 155     rf(t) = ReinvRate;
- 156     SPR = ReinvRate + 0.065;
- 157     spread = SPR;
- 158   
- 159     SOLVE Dedication MINIMIZING v0 using LP;
- 160   
- 161     PUT "Reinvestment Rate","Inital Investments","Bond Names", "Bond Maturi
+ 136  * Simulation for different values of the reinvestment rate rf
+ 137   
+ 138  SCALAR
+ 139     ReinvRate reinvestment rate
+ 140     SPR Spread;
+ 141   
+ 142  *FILE DedicationHandle /"DedicationPortfolios.csv"/;
+ 143   
+ 144  *DedicationHandle.pc = 5;
+ 145   
+ 146  *PUT DedicationHandle;
+ 147   
+ 148  *FOR ( ReinvRate = -0.04 to 0.02 by 0.005,
+ 149   
+ 150  *   rf(t) = ReinvRate;
+ 151  *   SPR = ReinvRate + 0.065;
+ 152  *   spread = SPR;
+ 153   
+ 154  *   SOLVE Dedication MINIMIZING v0 using LP;
+ 155   
+ 156  *  PUT "Reinvestment Rate","Inital Investments","Bond Names", "Bond Maturi
       ties", "Coupons", "Present Value", "Spread"/;
- 162   
- 163     LOOP ( i,
- 164   
- 165        PUT ReinvRate:10:4,v0.l:10:4,i.tl,BondData(i,"Maturity"),Coupon(i),(
-      x.l(i)*Price(i)):10:4, SPR:10:4/;
- 166   
- 167     );
- 168   
- 169     PUT "Year", "Borrowed", "Surplus"/;
- 170   
- 171     LOOP ( t,
- 172   
- 173     PUT t.tl,(-borrow.l(t)):10:3,surplus.l(t):10:3/;
+ 157   
+ 158  *   LOOP ( i,
+ 159   
+ 160  *      PUT ReinvRate:10:4,v0.l:10:4,i.tl,BondData(i,"Maturity"),Coupon(i),
+      (x.l(i)*Price(i)):10:4, SPR:10:4/;
+ 161   
+ 162  *   );
+ 163   
+ 164  *   PUT "Year", "Borrowed", "Surplus"/;
+ 165   
+ 166  *   LOOP ( t,
+ 167   
+ 168  *   PUT t.tl,(-borrow.l(t)):10:3,surplus.l(t):10:3/;
+ 169   
+ 170  *   );
+ 171   
+ 172  *);
+ 173   
  174   
- 175     );
+ 175   
  176   
- 177  );
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 2
+ 177  * Q6 Mismatch Generation(Dedication)
+ 178   
+ 179  **Scenario 1
+ 180  *PARAMETER r1(t)
+ 181  */
+ 182  *$ONDELIM
+ 183  *$INCLUDE "SpotRates1.inc"
+ 184  *$OFFDELIM
+ 185  */;
+ 186   
+ 187  *PARAMETERS
+ 188  *         PV(i)      Present value of assets
+ 189  *         PV_Liab    Present value of liability
+ 190  *         Mismatch   Mismatch
+ 191  *         PVA(i)     Present Value of Assets
+ 192  *;
+ 193   
+ 194  *PV(i)   = SUM(t, F(t,i) / {1 + r1(t)}**(tau(t))  );
+ 195  *PV_Liab   = SUM(t, Liability(t) / {1 + r1(t)}**(tau(t))  );
+ 196  *Mismatch = SUM(i, PV(i)*x.l(i)) - PV_Liab;
+ 197  *PVA(i) = PV(i) * x.l(i);
+ 198   
+ 199  *DISPLAY PV, PV_Liab, x.l, Mismatch;
+ 200   
+ 201  *FILE Mismat /"Mismatch_Generation.csv"/;
+ 202   
+ 203  *Mismat.pc = 5;
+ 204   
+ 205  *PUT Mismat;
+ 206   
+ 207  *PUT "Bonds","x(i)","PV(i)", "Present Value(assets)", "PV_Liab", "Mismatch
+      ", "Mismatch Percent"/;
+ 208   
+ 209  *LOOP (i,
+ 210   
+ 211  *         PUT i.tl,x(i):7:5,PV(i):7:5,PVA(i):7:5,0,0,0/;
+ 212  *);
+ 213   
+ 214  *PUTCLOSE Mismat;
+ 215   
+ 216   
+ 217   
+ 218  * Extension of Dedication model
+ 219   
+ 220  rf(t) = -0.015;
+ 221  spread = 0.05;
+ 222   
+ 223  PARAMETER r(t)
+ 224  /
+INCLUDE    C:\Users\Leonard Lee\OneDrive\Documents\University Files\Core Modules
+           \Math & Stats Modules\Year 3\Sem 1(SEP)\Optimization in Finance\Proje
+           ct\SpotRates.inc
+ 227  2017,0.0045
+ 228  2018,0.0023
+ 229  2019,0.0015
+ 230  2020,0.0011
+ 231  2021,0.0009
+ 232  2022,0.0008
+ 233  2023,0.0007
+ 234  2024,0.0032
+ 235  2025,0.0043
+ 236  2026,0.0049
+ 237  2027,0.0055
+ 238  2028,0.0062
+ 239  2029,0.0068
+ 240  2030,0.0075
+ 241  2031,0.0082
+ 242  2032,0.0089
+ 243  2033,0.0096
+ 244  2034,0.0102
+ 245  2035,0.0108
+ 246  2036,0.0114
+ 247  2037,0.0119
+ 248  2038,0.0124
+ 249  2039,0.0129
+ 251  /;
+ 252   
+ 253  PARAMETERS
+ 254           PV(i)      Present value of assets
+ 255           PV_Liab    Present value of liability
+ 256           B_Mismatch Biggest Mismatch
+ 257           PVA(i)     Present Value of Assets
+ 258           NPVA       Net Present Value of Assets
+ 259  ;
+ 260   
+ 261  PV(i)   = SUM(t, F(t,i) / {1 + r(t)}**(tau(t))  );
+ 262  PV_Liab   = SUM(t, Liability(t) / {1 + r(t)}**(tau(t))  );
+ 263  B_Mismatch = PV_Liab - SUM(i, PV(i)*x.l(i));
+ 264   
+ 265  VARIABLE
+ 266          mm             'Mismatch'
+ 267          z              'objvalue'
+ 268  ;
+ 269   
+ 270  EQUATION
+ 271  MismatchU               'Asset Liabilities Mismatch upper bound'
+ 272  MismatchL               'Asset Liabilities Mismtach lower bound'
+ 273  Mismatchdef             'Mismatch Definition'
+ 274  objfunc                 'Objective Func'
+ 275  ;
+ 276   
+ 277  Mismatchdef..             mm =E= PV_Liab - SUM(i, PV(i)*x(i));
+ 278  MismatchU..               mm =L= B_Mismatch;
+ 279  MismatchL..               mm =G= 0;
+ 280  objfunc..                 z =E= mm + v0;
+ 281   
+ 282  MODEL Dedicationext 'PFO Model 4.2.3' /Initial, CashFlowCon, Final, Mismat
+      chU, MismatchL, Mismatchdef,objfunc/;
+ 283  SOLVE Dedicationext MINIMIZING z USING LP;
+ 284   
+ 285  PVA(i) = PV(i) * x.l(i);
+ 286  NPVA = SUM(i, PVA(i))
+ 287   
+ 288  DISPLAY v0.l, borrow.l, surplus.l, x.l, mm.l, NPVA, PV_Liab;
+ 289   
+ 290  *MismatchL               'Asset Liabitilies Mismatch lower bound'
+ 291  *MismatchL..             mm =G= 0;
+ 292   
+ 293  *FOR ( ReinvRate = -0.04 to 0.02 by 0.005,
+ 294   
+ 295  *   rf(t) = ReinvRate;
+ 296  *   SPR = ReinvRate + 0.07;
+ 297  *   spread = SPR;
+ 298   
+ 299  *   SOLVE Dedicationext MINIMIZING mm USING LP;
+ 300   
+ 301  *   DISPLAY v0.l, borrow.l, surplus.l, x.l, mm.l;
+ 302   
+ 303  *);
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 2
 Dedication models
 Include File Summary
 
 
    SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
 
-     1        1 INPUT          0       0  C:\Users\khoongwh\Desktop\Wei Hao\NUS\
-                                          Applied Mathematics Major\Modules\Year
-                                          3 Semester 1 (On Exchange)\42123 Optim
-                                          ization in Finance (ST4245 Statistical
-                                          Methods for Finance)\Projects\Dedicati
-                                          on.gms
-     2       46 INCLUDE        1      46  .C:\Users\khoongwh\Documents\gamsdir\p
-                                           rojdir\Bonds.inc
+     1        1 INPUT          0       0  C:\Users\Leonard Lee\OneDrive\Document
+                                          s\University Files\Core Modules\Math &
+                                          Stats Modules\Year 3\Sem 1(SEP)\Optimi
+                                          zation in Finance\Project\Dedication.g
+                                          ms
+     2       46 INCLUDE        1      46  .C:\Users\Leonard Lee\OneDrive\Documen
+                                           ts\University Files\Core Modules\Math
+                                           & Stats Modules\Year 3\Sem 1(SEP)\Opt
+                                           imization in Finance\Project\BondData
+                                           .inc
+     3      226 INCLUDE        1     213  .C:\Users\Leonard Lee\OneDrive\Documen
+                                           ts\University Files\Core Modules\Math
+                                           & Stats Modules\Year 3\Sem 1(SEP)\Opt
+                                           imization in Finance\Project\SpotRate
+                                           s.inc
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 3
+COMPILATION TIME     =        0.000 SECONDS      3 MB  24.8.5 r61358 WEX-WEI
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 3
 Dedication models
 E x e c u t i o n
 
@@ -247,7 +384,7 @@ E x e c u t i o n
 2038                                                       0.045
 2039                                                       1.045
 
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 4
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 4
 Dedication models
 Equation Listing    SOLVE Dedication Using LP From line 130
 
@@ -309,7 +446,7 @@ REMAINING 20 ENTRIES SKIPPED
 
 Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
      
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 5
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 5
 Dedication models
 Column Listing      SOLVE Dedication Using LP From line 130
 
@@ -381,7 +518,7 @@ v0
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       Initial(2016)
 
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 6
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 6
 Dedication models
 Model Statistics    SOLVE Dedication Using LP From line 130
 
@@ -393,11 +530,11 @@ BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
 NON ZERO ELEMENTS           187
 
 
-GENERATION TIME      =        0.015 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
+GENERATION TIME      =        0.078 SECONDS      4 MB  24.8.5 r61358 WEX-WEI
 
 
-EXECUTION TIME       =        0.031 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 7
+EXECUTION TIME       =        0.078 SECONDS      4 MB  24.8.5 r61358 WEX-WEI
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 7
 Dedication models
 Solution Report     SOLVE Dedication Using LP From line 130
 
@@ -412,16 +549,16 @@ Solution Report     SOLVE Dedication Using LP From line 130
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE      21200048181.1546
 
- RESOURCE USAGE, LIMIT          0.078      1000.000
+ RESOURCE USAGE, LIMIT          0.063      1000.000
  ITERATION COUNT, LIMIT        32    2000000000
 
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   24.8.5 r61358 Released May 10, 2017 WEI x86 64bit/MS Windows 
 Cplex 12.7.1.0
 
 Space for names approximately 0.00 Mb
 Use option 'names no' to turn use of names off
 LP status(1): optimal
-Cplex Time: 0.06sec (det. 0.14 ticks)
+Cplex Time: 0.02sec (det. 0.14 ticks)
 Optimal solution found.
 Objective : 21200048181.154640
 
@@ -550,7 +687,7 @@ DK0009922320      .    7.0698E+9     +INF       .
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 8
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 8
 Dedication models
 E x e c u t i o n
 
@@ -576,14 +713,14 @@ DK0009921942 8.429045E+8,    DK0009922403 9.137263E+8
 DK0009922676 9.801269E+8,    DK0009918138 2.386057E+9
 DK0009923567 2.776484E+9,    DK0009922320 7.069836E+9
 
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 9
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 9
 Dedication models
-Equation Listing    SOLVE Dedication2 Using LP From line 136
+Equation Listing    SOLVE Dedicationext Using LP From line 283
 
 
----- Initial2  =E=  Initialization of the investment in model 2
+---- Initial  =E=  Initialization of the investment
 
-Initial2(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
+Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
      
       - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
      
@@ -591,9 +728,7 @@ Initial2(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
      
       - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
      
-      - surplus(2016) + borrow(2016) =E= -21200048181.1546 ;
-     
-      (LHS = -21200048181.1546)
+      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
      
 
 ---- CashFlowCon  =E=  Equations defining the cashflow balance
@@ -639,35 +774,68 @@ REMAINING 20 ENTRIES SKIPPED
 Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
      
 
----- FinalSurplus  =E=  Final surplus to be maximized in model 2
+---- MismatchU  =L=  Asset Liabilities Mismatch upper bound
 
-FinalSurplus..  - surplus(2039) + VplusFinal =E= 0 ; (LHS = 0)
+MismatchU..  mm =L= 541763521.725853 ; (LHS = 0)
      
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 10
+
+---- MismatchL  =G=  Asset Liabilities Mismtach lower bound
+
+MismatchL..  mm =G= 0 ; (LHS = 0)
+     
+
+---- Mismatchdef  =E=  Mismatch Definition
+
+Mismatchdef..  1.00556722723243*x(DK0009923641)
+     
+      + 1.00039316142342*x(DK0009923484) + 1.03534096565455*x(DK0009921942)
+     
+      + 1.114971444209*x(DK0009922403) + 1.14483933388213*x(DK0009922676)
+     
+      + 1.002081591986*x(DK0009922916) + 1.53075132646785*x(DK0009918138)
+     
+      + 0.99544246523363*x(DK0009923567) + 1.09963220245325*x(DK0009923054)
+     
+      + 1.11795282900195*x(DK0009923138) + 1.6842248400558*x(DK0009922320) + mm
+      =E= 21878805702.9704 ;
+     
+      (LHS = 21337042181.2445, INFES = 541763521.725853 ****)
+     
+
+---- objfunc  =E=  Objective Func
+
+objfunc..  - v0 - mm + z =E= 0 ;
+     
+      (LHS = -21200048181.1546, INFES = 21200048181.1546 ****)
+     
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 10
 Dedication models
-Column Listing      SOLVE Dedication2 Using LP From line 136
+Column Listing      SOLVE Dedicationext Using LP From line 283
 
 
 ---- x  Face value purchased
 
 x(DK0009923641)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0.0170791784063637)
-       -1.0235  Initial2(2016)
+       -1.0235  Initial(2016)
         0.0025  CashFlowCon(2017)
         0.0025  CashFlowCon(2018)
         0.0025  CashFlowCon(2019)
         1.0025  CashFlowCon(2020)
+        1.0056  Mismatchdef
 
 x(DK0009923484)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0.0231902662534168)
-       -1.0102  Initial2(2016)
+       -1.0102  Initial(2016)
         0.0025  CashFlowCon(2017)
         1.0025  CashFlowCon(2018)
+        1.0004  Mismatchdef
 
 x(DK0009921942)
                 (.LO, .L, .UP, .M = 0, 842904453.798081, +INF, 0)
-       -1.0061  Initial2(2016)
+       -1.0061  Initial(2016)
         1.04    CashFlowCon(2017)
+        1.0353  Mismatchdef
 
 REMAINING 8 ENTRIES SKIPPED
 
@@ -675,7 +843,7 @@ REMAINING 8 ENTRIES SKIPPED
 
 surplus(2016)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0.0471072115384615)
-       -1       Initial2(2016)
+       -1       Initial(2016)
         0.985   CashFlowCon(2017)
 
 surplus(2017)
@@ -694,7 +862,7 @@ REMAINING 21 ENTRIES SKIPPED
 
 borrow(2016)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0.00126298076923059)
-        1       Initial2(2016)
+        1       Initial(2016)
        -1.035   CashFlowCon(2017)
 
 borrow(2017)
@@ -709,1961 +877,73 @@ borrow(2018)
 
 REMAINING 21 ENTRIES SKIPPED
 
----- VplusFinal  Final value of vplus to be maximized in model 2
-
-VplusFinal
-                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
-        1       FinalSurplus
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 11
-Dedication models
-Model Statistics    SOLVE Dedication2 Using LP From line 136
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           26
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           188
-
-
-GENERATION TIME      =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 12
-Dedication models
-Solution Report     SOLVE Dedication2 Using LP From line 136
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication2         OBJECTIVE  VplusFinal
-     TYPE    LP                  DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  136
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      1 Optimal                   
-**** OBJECTIVE VALUE                0.0000
-
- RESOURCE USAGE, LIMIT          0.016      1000.000
- ITERATION COUNT, LIMIT         2    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(1): optimal
-Cplex Time: 0.00sec (det. 0.11 ticks)
-Optimal solution found.
-Objective :           0.000003
-
-
----- EQU Initial2  Initialization of the investment in model 2
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016 -2.12E+10 -2.12E+10 -2.12E+10    -1.372      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9    -1.328      
-2018 1.0000E+9 1.0000E+9 1.0000E+9    -1.348      
-2019 1.0000E+9 1.0000E+9 1.0000E+9    -1.347      
-2020 1.0000E+9 1.0000E+9 1.0000E+9    -1.368      
-2021 1.0000E+9 1.0000E+9 1.0000E+9    -1.361      
-2022 1.0000E+9 1.0000E+9 1.0000E+9    -1.382      
-2023 1.0000E+9 1.0000E+9 1.0000E+9    -1.343      
-2024 1.0000E+9 1.0000E+9 1.0000E+9    -1.298      
-2025 1.0000E+9 1.0000E+9 1.0000E+9    -1.317      
-2026 1.0000E+9 1.0000E+9 1.0000E+9    -1.337      
-2027 1.0000E+9 1.0000E+9 1.0000E+9    -1.295      
-2028 1.0000E+9 1.0000E+9 1.0000E+9    -1.315      
-2029 1.0000E+9 1.0000E+9 1.0000E+9    -1.335      
-2030 1.0000E+9 1.0000E+9 1.0000E+9    -1.355      
-2031 1.0000E+9 1.0000E+9 1.0000E+9    -1.317      
-2032 1.0000E+9 1.0000E+9 1.0000E+9    -1.272      
-2033 1.0000E+9 1.0000E+9 1.0000E+9    -1.229      
-2034 1.0000E+9 1.0000E+9 1.0000E+9    -1.188      
-2035 1.0000E+9 1.0000E+9 1.0000E+9    -1.148      
-2036 1.0000E+9 1.0000E+9 1.0000E+9    -1.109      
-2037 1.0000E+9 1.0000E+9 1.0000E+9    -1.071      
-2038 1.0000E+9 1.0000E+9 1.0000E+9    -1.035      
-2039 1.0000E+9 1.0000E+9 1.0000E+9    -1.000      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .        1.000      
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- EQU FinalSurp~      .         .         .        1.000      
-
-  FinalSurplus  Final surplus to be maximized in model 2
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF     -0.023      
-DK0009923484      .         .        +INF     -0.032      
-DK0009921942      .    8.4290E+8     +INF       .         
-DK0009922403      .    9.1373E+8     +INF       .         
-DK0009922676      .    9.8013E+8     +INF       .         
-DK0009922916      .         .        +INF     -0.125      
-DK0009918138      .    2.3861E+9     +INF       .         
-DK0009923567      .    2.7765E+9     +INF       .         
-DK0009923054      .         .        +INF     -0.017      
-DK0009923138      .         .        +INF     -0.014      
-DK0009922320      .    7.0698E+9     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF     -0.065      
-2017      .    4.4162E+8     +INF       .         
-2018      .         .        +INF     -0.021      
-2019      .    4.7873E+8     +INF       .         
-2020      .         .        +INF     -0.027      
-2021      .    5.0858E+8     +INF       .         
-2022      .         .        +INF     -0.059      
-2023      .         .        +INF     -0.065      
-2024      .    1.3666E+9     +INF       .         
-2025      .    6.7815E+8     +INF       .         
-2026      .         .        +INF     -0.062      
-2027      .    2.1085E+9     +INF       .         
-2028      .    1.3950E+9     +INF       .         
-2029      .    6.9224E+8     +INF       .         
-2030      .         .        +INF     -0.058      
-2031      .         .        +INF     -0.064      
-2032      .         .        +INF     -0.061      
-2033      .         .        +INF     -0.059      
-2034      .         .        +INF     -0.057      
-2035      .         .        +INF     -0.055      
-2036      .         .        +INF     -0.054      
-2037      .         .        +INF     -0.052      
-2038      .         .        +INF     -0.050      
-2039      .    2.8610E-6     +INF       .         
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF     -0.002      
-2017      .         .        +INF     -0.067      
-2018      .         .        +INF     -0.046      
-2019      .         .        +INF     -0.068      
-2020      .         .        +INF     -0.041      
-2021      .         .        +INF     -0.069      
-2022      .         .        +INF     -0.008      
-2023      .    5.0095E+8     +INF       .         
-2024      .         .        +INF     -0.066      
-2025      .         .        +INF     -0.067      
-2026      .         .        +INF     -0.003      
-2027      .         .        +INF     -0.066      
-2028      .         .        +INF     -0.067      
-2029      .         .        +INF     -0.068      
-2030      .         .        +INF     -0.008      
-2031      .    6.8186E+8     +INF       .         
-2032      .    1.3876E+9     +INF       .         
-2033      .    2.1180E+9     +INF       .         
-2034      .    2.8740E+9     +INF       .         
-2035      .    3.6564E+9     +INF       .         
-2036      .    4.4663E+9     +INF       .         
-2037      .    5.3044E+9     +INF       .         
-2038      .    6.1720E+9     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR VplusFinal     -INF  2.8610E-6     +INF       .         
-
-  VplusFinal  Final value of vplus to be maximized in model 2
-
-
-**** REPORT SUMMARY :        0     NONOPT
-                             0 INFEASIBLE
-                             0  UNBOUNDED
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 13
-Dedication models
-E x e c u t i o n
-
-
-----    137 VARIABLE VplusFinal.L          =  2.861023E-6  Final value of vplus 
-                                                           to be maximized in mo
-                                                           del 2
-
-----    137 VARIABLE borrow.L  Amount of money borrowed
-
-2023 5.009510E+8,    2031 6.818574E+8,    2032 1.387580E+9,    2033 2.118002E+9
-2034 2.873990E+9,    2035 3.656437E+9,    2036 4.466270E+9,    2037 5.304447E+9
-2038 6.171960E+9
-
-
-----    137 VARIABLE surplus.L  Amount of money reinvested
-
-2017 4.416225E+8,    2019 4.787281E+8,    2021 5.085797E+8,    2024 1.366621E+9
-2025 6.781472E+8,    2027 2.108509E+9,    2028 1.395024E+9,    2029 6.922410E+8
-2039 2.861023E-6
-
-
-----    137 VARIABLE x.L  Face value purchased
-
-DK0009921942 8.429045E+8,    DK0009922403 9.137263E+8
-DK0009922676 9.801269E+8,    DK0009918138 2.386057E+9
-DK0009923567 2.776484E+9,    DK0009922320 7.069836E+9
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 14
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ;
-     
-      (LHS = -3.814697265625E-6, INFES = 3.814697265625E-6 ****)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 0.96*surplus(2016) - surplus(2017) - 0.985*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 0.96*surplus(2017)
-     
-      - surplus(2018) - 0.985*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 988959437.884761, INFES = 11040562.1152393 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 0.96*surplus(2018) - surplus(2019)
-     
-      - 0.985*borrow(2018) + borrow(2019) =E= 1000000000 ; (LHS = 1000000000)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 15
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.0234411600746096)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.0318286237478864)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 842904453.798082, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.0646546139438506)
-       -1       Initial(2016)
-        0.96    CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 441622484.609574, +INF, 0)
-       -1       CashFlowCon(2017)
-        0.96    CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.020873450992229)
-       -1       CashFlowCon(2018)
-        0.96    CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.00173344019707966)
-        1       Initial(2016)
-       -0.985   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.067399039736985)
-        1       CashFlowCon(2017)
-       -0.985   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.0464924040203332)
-        1       CashFlowCon(2018)
-       -0.985   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
 ---- v0  Upfront investment
 
 v0
                 (.LO, .L, .UP, .M = -INF, 21200048181.1546, +INF, 0)
         1       Initial(2016)
+       -1       objfunc
 
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 16
+
+---- mm  Mismatch
+
+mm
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       MismatchU
+        1       MismatchL
+        1       Mismatchdef
+       -1       objfunc
+
+
+---- z  objvalue
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objfunc
+
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 11
 Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   1
+Model Statistics    SOLVE Dedicationext Using LP From line 283
 
 
 MODEL STATISTICS
 
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS           29
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES           62
+NON ZERO ELEMENTS           204
 
 
-GENERATION TIME      =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+GENERATION TIME      =        0.047 SECONDS      3 MB  24.8.5 r61358 WEX-WEI
 
 
-EXECUTION TIME       =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 1
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 17
+EXECUTION TIME       =        0.047 SECONDS      3 MB  24.8.5 r61358 WEX-WEI
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 12
 Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
+Solution Report     SOLVE Dedicationext Using LP From line 283
 
 
                S O L V E      S U M M A R Y
 
-     MODEL   Dedication          OBJECTIVE  v0
+     MODEL   Dedicationext       OBJECTIVE  z
      TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
+     SOLVER  CPLEX               FROM LINE  283
 
 **** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      3 Unbounded                 
-**** OBJECTIVE VALUE      18702715363.2774
-
- RESOURCE USAGE, LIMIT          0.094      1000.000
- ITERATION COUNT, LIMIT         9    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(4): unbounded or infeasible
-Cplex Time: 0.00sec (det. 0.03 ticks)
-Presolve found the problem infeasible or unbounded.
-Rerunning with presolve turned off and solving with LPMETHOD=0
-LP status(2): unbounded
-Cplex Time: 0.08sec (det. 0.04 ticks)
-Model has an unbounded ray.
-
-**** ERRORS/WARNINGS IN VARIABLE borrow(2016)
-     1 error(s): Unbounded variable
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     1.008      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.981      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     1.022      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.990      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     1.032      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.660      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.670      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.681      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.691      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.701      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.712      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.723      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.734      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.745      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.757      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.768      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.780      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.792      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.804      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.816      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.828      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.841      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.841      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF     -0.008  NOPT
-DK0009923484      .         .        +INF     -0.002  NOPT
-DK0009921942      .    1.0129E+9     +INF       .         
-DK0009922403      .    1.0992E+9     +INF       .         
-DK0009922676      .    1.1801E+9     +INF       .         
-DK0009922916      .         .        +INF      0.409      
-DK0009918138      .         .        +INF      0.311      
-DK0009923567      .         .        +INF      0.249      
-DK0009923054      .         .        +INF      0.334      
-DK0009923138      .         .        +INF      0.303      
-DK0009922320      .    8.9926E+9     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.071      
-2017      .    5.3746E+8     +INF       .         
-2018      .         .        +INF      0.066      
-2019      .    5.8326E+8     +INF       .         
-2020      .         .        +INF      0.071      
-2021      .    6.2014E+8     +INF       .         
-2022      .         .        +INF      0.398      
-2023      .         .        +INF      0.017      
-2024      .         .        +INF      0.017      
-2025      .         .        +INF      0.017      
-2026      .         .        +INF      0.018      
-2027      .         .        +INF      0.018      
-2028      .         .        +INF      0.018      
-2029      .         .        +INF      0.018      
-2030      .         .        +INF      0.019      
-2031      .         .        +INF      0.019      
-2032      .         .        +INF      0.019      
-2033      .         .        +INF      0.019      
-2034      .         .        +INF      0.020      
-2035      .         .        +INF      0.020      
-2036      .         .        +INF      0.020      
-2037      .         .        +INF      0.021      
-2038      .         .        +INF      0.021      
-2039      .         .        +INF      0.841      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF     -0.047 UNBND
-2017      .         .        +INF      0.025      
-2018      .         .        +INF     -0.042  NOPT
-2019      .         .        +INF      0.026      
-2020      .         .        +INF     -0.046  NOPT
-2021      .         .        +INF      0.026      
-2022      .         .        +INF     -0.381  NOPT
-2023      .    5.9533E+8     +INF       .         
-2024      .    1.1817E+9     +INF       .         
-2025      .    1.7593E+9     +INF       .         
-2026      .    2.3283E+9     +INF       .         
-2027      .    2.8887E+9     +INF       .         
-2028      .    3.4407E+9     +INF       .         
-2029      .    3.9844E+9     +INF       .         
-2030      .    4.5200E+9     +INF       .         
-2031      .    5.0475E+9     +INF       .         
-2032      .    5.5671E+9     +INF       .         
-2033      .    6.0789E+9     +INF       .         
-2034      .    6.5831E+9     +INF       .         
-2035      .    7.0797E+9     +INF       .         
-2036      .    7.5688E+9     +INF       .         
-2037      .    8.0506E+9     +INF       .         
-2038      .    8.5252E+9     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  1.870E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        5     NONOPT ( NOPT)
-                             0 INFEASIBLE
-                             1  UNBOUNDED (UNBND)
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 18
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 0.965*surplus(2016) - surplus(2017) - 0.995*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 0.965*surplus(2017)
-     
-      - surplus(2018) - 0.995*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 1002687293.93045, INFES = 2687293.93045008 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 0.965*surplus(2018) - surplus(2019)
-     
-      - 0.995*borrow(2018) + borrow(2019) =E= 1000000000 ; (LHS = 1000000000)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 19
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.00797308673043551)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.00245013020833329)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 1012903096.86193, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0712923076923078)
-       -1       Initial(2016)
-        0.965   CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 537458786.090002, +INF, 0)
-       -1       CashFlowCon(2017)
-        0.965   CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0662704758382645)
-       -1       CashFlowCon(2018)
-        0.965   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.0471072115384615)
-        1       Initial(2016)
-       -0.995   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0251928084935898)
-        1       CashFlowCon(2017)
-       -0.995   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.0417537606323967)
-        1       CashFlowCon(2018)
-       -0.995   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 18702715363.2774, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 20
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   2
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 2
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 21
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      3 Unbounded                 
-**** OBJECTIVE VALUE      18506887984.2602
-
- RESOURCE USAGE, LIMIT          0.125      1000.000
- ITERATION COUNT, LIMIT         6    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(4): unbounded or infeasible
-Cplex Time: 0.00sec (det. 0.03 ticks)
-Presolve found the problem infeasible or unbounded.
-Rerunning with presolve turned off and solving with LPMETHOD=0
-LP status(2): unbounded
-Cplex Time: 0.09sec (det. 0.04 ticks)
-Model has an unbounded ray.
-
-**** ERRORS/WARNINGS IN VARIABLE borrow(2016)
-     1 error(s): Unbounded variable
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.761      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.765      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.769      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     0.773      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.776      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     0.780      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.784      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.788      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.792      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.796      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.800      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.804      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.808      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.812      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.816      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.820      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.825      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.829      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.833      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.837      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.841      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.846      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.850      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.850      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.243      
-DK0009923484      .         .        +INF      0.241      
-DK0009921942      .         .        +INF      0.215      
-DK0009922403      .         .        +INF      0.238      
-DK0009922676      .         .        +INF      0.248      
-DK0009922916      .         .        +INF      0.287      
-DK0009918138      .         .        +INF      0.273      
-DK0009923567      .         .        +INF      0.154      
-DK0009923054      .         .        +INF      0.229      
-DK0009923138      .         .        +INF      0.209      
-DK0009922320      .    1.100E+10     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.266      
-2017      .         .        +INF      0.023      
-2018      .         .        +INF      0.023      
-2019      .         .        +INF      0.023      
-2020      .         .        +INF      0.023      
-2021      .         .        +INF      0.023      
-2022      .         .        +INF      0.024      
-2023      .         .        +INF      0.024      
-2024      .         .        +INF      0.024      
-2025      .         .        +INF      0.024      
-2026      .         .        +INF      0.024      
-2027      .         .        +INF      0.024      
-2028      .         .        +INF      0.024      
-2029      .         .        +INF      0.024      
-2030      .         .        +INF      0.024      
-2031      .         .        +INF      0.025      
-2032      .         .        +INF      0.025      
-2033      .         .        +INF      0.025      
-2034      .         .        +INF      0.025      
-2035      .         .        +INF      0.025      
-2036      .         .        +INF      0.025      
-2037      .         .        +INF      0.025      
-2038      .         .        +INF      0.025      
-2039      .         .        +INF      0.850      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF     -0.243 UNBND
-2017      .    5.0505E+8     +INF       .         
-2018      .    1.0076E+9     +INF       .         
-2019      .    1.5076E+9     +INF       .         
-2020      .    2.0051E+9     +INF       .         
-2021      .    2.5001E+9     +INF       .         
-2022      .    2.9926E+9     +INF       .         
-2023      .    3.4827E+9     +INF       .         
-2024      .    3.9704E+9     +INF       .         
-2025      .    4.4556E+9     +INF       .         
-2026      .    4.9383E+9     +INF       .         
-2027      .    5.4187E+9     +INF       .         
-2028      .    5.8966E+9     +INF       .         
-2029      .    6.3722E+9     +INF       .         
-2030      .    6.8454E+9     +INF       .         
-2031      .    7.3162E+9     +INF       .         
-2032      .    7.7847E+9     +INF       .         
-2033      .    8.2508E+9     +INF       .         
-2034      .    8.7146E+9     +INF       .         
-2035      .    9.1760E+9     +INF       .         
-2036      .    9.6352E+9     +INF       .         
-2037      .    1.009E+10     +INF       .         
-2038      .    1.055E+10     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  1.851E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        0     NONOPT
-                             0 INFEASIBLE
-                             1  UNBOUNDED (UNBND)
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 22
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 0.97*surplus(2016) - surplus(2017) - 1.005*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 0.97*surplus(2017)
-     
-      - surplus(2018) - 1.005*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 994949542.132959, INFES = 5050457.86704087 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 0.97*surplus(2018) - surplus(2019)
-     
-      - 1.005*borrow(2018) + borrow(2019) =E= 1000000000 ;
-     
-      (LHS = 989924336.555254, INFES = 10075663.4447465 ****)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 23
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.243239895582868)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.241499802433354)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.214596658473896)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.265576226372413)
-       -1       Initial(2016)
-        0.97    CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0229465599592029)
-       -1       CashFlowCon(2017)
-        0.97    CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0230618693057315)
-       -1       CashFlowCon(2018)
-        0.97    CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.242744399213006)
-        1       Initial(2016)
-       -1.005   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 505045786.704084, +INF, 0)
-        1       CashFlowCon(2017)
-       -1.005   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 1007566344.47465, +INF, 0)
-        1       CashFlowCon(2018)
-       -1.005   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 18506887984.2602, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 24
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   3
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 3
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 25
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      3 Unbounded                 
-**** OBJECTIVE VALUE      19534530437.6184
-
- RESOURCE USAGE, LIMIT          0.062      1000.000
- ITERATION COUNT, LIMIT         0    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(4): unbounded or infeasible
-Cplex Time: 0.00sec (det. 0.03 ticks)
-Presolve found the problem infeasible or unbounded.
-Rerunning with presolve turned off and solving with LPMETHOD=0
-LP status(2): unbounded
-Cplex Time: 0.05sec (det. 0.02 ticks)
-Model has an unbounded ray.
-
-**** ERRORS/WARNINGS IN VARIABLE borrow(2016)
-     1 error(s): Unbounded variable
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.897      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.892      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.888      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     0.883      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.879      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     0.875      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.870      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.866      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.862      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.857      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.853      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.849      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.845      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.840      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.836      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.832      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.828      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.824      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.820      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.816      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.812      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.808      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.804      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.804      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.131      
-DK0009923484      .         .        +INF      0.113      
-DK0009921942      .         .        +INF      0.073      
-DK0009922403      .         .        +INF      0.104      
-DK0009922676      .         .        +INF      0.127      
-DK0009922916      .         .        +INF      0.200      
-DK0009918138      .         .        +INF      0.135      
-DK0009923567      .         .        +INF      0.096      
-DK0009923054      .         .        +INF      0.132      
-DK0009923138      .         .        +INF      0.124      
-DK0009922320      .    1.161E+10     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.130      
-2017      .         .        +INF      0.031      
-2018      .         .        +INF      0.031      
-2019      .         .        +INF      0.031      
-2020      .         .        +INF      0.031      
-2021      .         .        +INF      0.031      
-2022      .         .        +INF      0.030      
-2023      .         .        +INF      0.030      
-2024      .         .        +INF      0.030      
-2025      .         .        +INF      0.030      
-2026      .         .        +INF      0.030      
-2027      .         .        +INF      0.030      
-2028      .         .        +INF      0.030      
-2029      .         .        +INF      0.029      
-2030      .         .        +INF      0.029      
-2031      .         .        +INF      0.029      
-2032      .         .        +INF      0.029      
-2033      .         .        +INF      0.029      
-2034      .         .        +INF      0.029      
-2035      .         .        +INF      0.029      
-2036      .         .        +INF      0.028      
-2037      .         .        +INF      0.028      
-2038      .         .        +INF      0.028      
-2039      .         .        +INF      0.804      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF     -0.099 UNBND
-2017      .    4.7756E+8     +INF       .         
-2018      .    9.5751E+8     +INF       .         
-2019      .    1.4399E+9     +INF       .         
-2020      .    1.9246E+9     +INF       .         
-2021      .    2.4118E+9     +INF       .         
-2022      .    2.9014E+9     +INF       .         
-2023      .    3.3935E+9     +INF       .         
-2024      .    3.8880E+9     +INF       .         
-2025      .    4.3850E+9     +INF       .         
-2026      .    4.8845E+9     +INF       .         
-2027      .    5.3865E+9     +INF       .         
-2028      .    5.8910E+9     +INF       .         
-2029      .    6.3980E+9     +INF       .         
-2030      .    6.9076E+9     +INF       .         
-2031      .    7.4197E+9     +INF       .         
-2032      .    7.9343E+9     +INF       .         
-2033      .    8.4516E+9     +INF       .         
-2034      .    8.9714E+9     +INF       .         
-2035      .    9.4938E+9     +INF       .         
-2036      .    1.002E+10     +INF       .         
-2037      .    1.055E+10     +INF       .         
-2038      .    1.108E+10     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  1.953E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        0     NONOPT
-                             0 INFEASIBLE
-                             1  UNBOUNDED (UNBND)
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 26
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 0.975*surplus(2016) - surplus(2017) - 1.015*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 0.975*surplus(2017)
-     
-      - surplus(2018) - 1.015*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 995224378.16292, INFES = 4775621.83708048 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 0.975*surplus(2018) - surplus(2019)
-     
-      - 1.015*borrow(2018) + borrow(2019) =E= 1000000000 ;
-     
-      (LHS = 990424878.216653, INFES = 9575121.78334665 ****)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 27
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.131181869726546)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.113453739617812)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0734954887611218)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.130166946248354)
-       -1       Initial(2016)
-        0.975   CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.031229580839419)
-       -1       CashFlowCon(2017)
-        0.975   CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0310742097904668)
-       -1       CashFlowCon(2018)
-        0.975   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.098781217504738)
-        1       Initial(2016)
-       -1.015   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 477562183.708054, +INF, 0)
-        1       CashFlowCon(2017)
-       -1.015   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 957512178.334648, +INF, 0)
-        1       CashFlowCon(2018)
-       -1.015   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 19534530437.6184, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 28
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   4
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 4
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 29
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      3 Unbounded                 
-**** OBJECTIVE VALUE      20510129746.1010
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE      21200712254.5609
 
  RESOURCE USAGE, LIMIT          0.047      1000.000
  ITERATION COUNT, LIMIT         2    2000000000
 
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(4): unbounded or infeasible
-Cplex Time: 0.00sec (det. 0.03 ticks)
-Presolve found the problem infeasible or unbounded.
-Rerunning with presolve turned off and solving with LPMETHOD=0
-LP status(2): unbounded
-Cplex Time: 0.03sec (det. 0.03 ticks)
-Model has an unbounded ray.
-
-**** ERRORS/WARNINGS IN VARIABLE borrow(2016)
-     1 error(s): Unbounded variable
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.996      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.981      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     1.008      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.993      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     0.978      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.964      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.950      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.936      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.922      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.908      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.895      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.882      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.869      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.856      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.843      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.831      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.818      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.806      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.794      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.783      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.771      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.760      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.760      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.006      
-DK0009923484      .         .        +INF      0.009      
-DK0009921942      .    4.3607E+8     +INF       .         
-DK0009922403      .    9.1382E+8     +INF       .         
-DK0009922676      .         .        +INF     -0.002  NOPT
-DK0009922916      .         .        +INF      0.105      
-DK0009918138      .         .        +INF     -0.003  NOPT
-DK0009923567      .         .        +INF      0.036      
-DK0009923054      .         .        +INF      0.027      
-DK0009923138      .         .        +INF      0.035      
-DK0009922320      .    1.133E+10     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.057      
-2017      .         .        +INF     -0.004  NOPT
-2018      .         .        +INF      0.039      
-2019      .         .        +INF     -0.002  NOPT
-2020      .         .        +INF      0.040      
-2021      .         .        +INF      0.039      
-2022      .         .        +INF      0.039      
-2023      .         .        +INF      0.038      
-2024      .         .        +INF      0.037      
-2025      .         .        +INF      0.037      
-2026      .         .        +INF      0.036      
-2027      .         .        +INF      0.036      
-2028      .         .        +INF      0.035      
-2029      .         .        +INF      0.035      
-2030      .         .        +INF      0.034      
-2031      .         .        +INF      0.034      
-2032      .         .        +INF      0.033      
-2033      .         .        +INF      0.033      
-2034      .         .        +INF      0.032      
-2035      .         .        +INF      0.032      
-2036      .         .        +INF      0.031      
-2037      .         .        +INF      0.031      
-2038      .         .        +INF      0.030      
-2039      .         .        +INF      0.760      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF     -0.018 UNBND
-2017      .         .        +INF      0.043      
-2018      .    4.5351E+8     +INF       .         
-2019      .         .        +INF      0.042      
-2020      .    4.9006E+8     +INF       .         
-2021      .    9.8747E+8     +INF       .         
-2022      .    1.4923E+9     +INF       .         
-2023      .    2.0048E+9     +INF       .         
-2024      .    2.5249E+9     +INF       .         
-2025      .    3.0529E+9     +INF       .         
-2026      .    3.5887E+9     +INF       .         
-2027      .    4.1326E+9     +INF       .         
-2028      .    4.6846E+9     +INF       .         
-2029      .    5.2450E+9     +INF       .         
-2030      .    5.8137E+9     +INF       .         
-2031      .    6.3910E+9     +INF       .         
-2032      .    6.9769E+9     +INF       .         
-2033      .    7.5716E+9     +INF       .         
-2034      .    8.1753E+9     +INF       .         
-2035      .    8.7879E+9     +INF       .         
-2036      .    9.4098E+9     +INF       .         
-2037      .    1.004E+10     +INF       .         
-2038      .    1.068E+10     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  2.051E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        4     NONOPT ( NOPT)
-                             0 INFEASIBLE
-                             1  UNBOUNDED (UNBND)
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 30
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ;
-     
-      (LHS = -3.814697265625E-6, INFES = 3.814697265625E-6 ****)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 0.98*surplus(2016) - surplus(2017) - 1.025*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 0.98*surplus(2017)
-     
-      - surplus(2018) - 1.025*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 1000000000)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 0.98*surplus(2018) - surplus(2019)
-     
-      - 1.025*borrow(2018) + borrow(2019) =E= 1000000000 ;
-     
-      (LHS = 995464923.688571, INFES = 4535076.31142926 ****)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 31
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.00560866021458706)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.00944984953159966)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 436065029.945125, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.05678125)
-       -1       Initial(2016)
-        0.98    CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.00354213871567044)
-       -1       CashFlowCon(2017)
-        0.98    CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0392450063355114)
-       -1       CashFlowCon(2018)
-        0.98    CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.0180850961538462)
-        1       Initial(2016)
-       -1.025   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0433758201462147)
-        1       CashFlowCon(2017)
-       -1.025   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 453507631.14293, +INF, 0)
-        1       CashFlowCon(2018)
-       -1.025   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 20510129746.101, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 32
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   5
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 5
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 33
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      3 Unbounded                 
-**** OBJECTIVE VALUE      20935274567.1833
-
- RESOURCE USAGE, LIMIT          0.031      1000.000
- ITERATION COUNT, LIMIT         6    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(4): unbounded or infeasible
-Cplex Time: 0.00sec (det. 0.03 ticks)
-Presolve found the problem infeasible or unbounded.
-Rerunning with presolve turned off and solving with LPMETHOD=0
-LP status(2): unbounded
-Cplex Time: 0.02sec (det. 0.04 ticks)
-Model has an unbounded ray.
-
-**** ERRORS/WARNINGS IN VARIABLE borrow(2016)
-     1 error(s): Unbounded variable
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.987      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.981      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     1.001      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.992      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     0.994      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.970      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.946      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.970      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.972      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.948      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.925      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.902      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.880      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.859      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.838      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.817      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.797      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.778      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.759      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.741      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.741      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.012      
-DK0009923484      .         .        +INF      0.018      
-DK0009921942      .    8.5924E+8     +INF       .         
-DK0009922403      .    9.3164E+8     +INF       .         
-DK0009922676      .    4.7956E+8     +INF       .         
-DK0009922916      .         .        +INF      0.100      
-DK0009918138      .    1.5192E+9     +INF       .         
-DK0009923567      .    1.2369E+9     +INF       .         
-DK0009923054      .         .        +INF      0.021      
-DK0009923138      .    6.0029E+8     +INF       .         
-DK0009922320      .    8.5116E+9     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.052      
-2017      .    4.5132E+8     +INF       .         
-2018      .         .        +INF      0.025      
-2019      .    4.8935E+8     +INF       .         
-2020      .         .        +INF      0.030      
-2021      .         .        +INF      0.017      
-2022      .         .        +INF      0.044      
-2023      .         .        +INF      0.043      
-2024      .         .        +INF     -0.004  NOPT
-2025      .         .        +INF      0.022      
-2026      .         .        +INF      0.042      
-2027      .         .        +INF     -0.009  NOPT
-2028      .         .        +INF      0.043      
-2029      .         .        +INF      0.042      
-2030      .         .        +INF      0.041      
-2031      .         .        +INF      0.040      
-2032      .         .        +INF      0.039      
-2033      .         .        +INF      0.038      
-2034      .         .        +INF      0.037      
-2035      .         .        +INF      0.036      
-2036      .         .        +INF      0.035      
-2037      .         .        +INF      0.034      
-2038      .         .        +INF      0.033      
-2039      .         .        +INF      0.741      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF     -0.008 UNBND
-2017      .         .        +INF      0.044      
-2018      .         .        +INF      0.019      
-2019      .         .        +INF      0.045      
-2020      .         .        +INF      0.015      
-2021      .         .        +INF      0.027      
-2022      .    4.9395E+8     +INF       .         
-2023      .    1.0002E+9     +INF       .         
-2024      .         .        +INF      0.048      
-2025      .         .        +INF      0.022      
-2026      .    6.1080E+8     +INF       .         
-2027      .         .        +INF      0.052      
-2028      .    6.1698E+8     +INF       .         
-2029      .    1.2494E+9     +INF       .         
-2030      .    1.8976E+9     +INF       .         
-2031      .    2.5620E+9     +INF       .         
-2032      .    3.2430E+9     +INF       .         
-2033      .    3.9411E+9     +INF       .         
-2034      .    4.6566E+9     +INF       .         
-2035      .    5.3900E+9     +INF       .         
-2036      .    6.1417E+9     +INF       .         
-2037      .    6.9123E+9     +INF       .         
-2038      .    7.7020E+9     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  2.094E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        2     NONOPT ( NOPT)
-                             0 INFEASIBLE
-                             1  UNBOUNDED (UNBND)
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 34
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 0.985*surplus(2016) - surplus(2017) - 1.035*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 0.985*surplus(2017)
-     
-      - surplus(2018) - 1.035*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 1002256601.86956, INFES = 2256601.86956441 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 0.985*surplus(2018) - surplus(2019)
-     
-      - 1.035*borrow(2018) + borrow(2019) =E= 1000000000 ; (LHS = 1000000000)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 35
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0121668721959107)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0181668416405024)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 859244558.026505, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0519442307692308)
-       -1       Initial(2016)
-        0.985   CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 451320373.912912, +INF, 0)
-       -1       CashFlowCon(2017)
-        0.985   CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0253163823813549)
-       -1       CashFlowCon(2018)
-        0.985   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, -0.00841105769230777)
-        1       Initial(2016)
-       -1.035   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0444216051805337)
-        1       CashFlowCon(2017)
-       -1.035   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0188492992241274)
-        1       CashFlowCon(2018)
-       -1.035   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 20935274567.1833, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 36
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   6
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.015 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.015 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 6
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 37
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      1 Optimal                   
-**** OBJECTIVE VALUE      21200048181.1546
-
- RESOURCE USAGE, LIMIT          0.031      1000.000
- ITERATION COUNT, LIMIT         7    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+IBM ILOG CPLEX   24.8.5 r61358 Released May 10, 2017 WEI x86 64bit/MS Windows 
 Cplex 12.7.1.0
 
 Space for names approximately 0.00 Mb
 Use option 'names no' to turn use of names off
 LP status(1): optimal
-Cplex Time: 0.01sec (det. 0.12 ticks)
+Cplex Time: 0.00sec (det. 0.13 ticks)
 Optimal solution found.
-Objective : 21200048181.154640
+Objective : 21200712254.560925
 
 
 ---- EQU Initial  Initialization of the investment
@@ -2676,35 +956,47 @@ Objective : 21200048181.154640
 
         LOWER     LEVEL     UPPER    MARGINAL
 
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.982      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.982      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     0.997      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.992      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     1.007      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.978      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.945      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.960      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.974      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.943      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.958      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.972      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.987      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.959      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.927      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.896      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.865      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.836      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.808      
+2017 1.0000E+9 1.0000E+9 1.0000E+9     0.966      
+2018 1.0000E+9 1.0000E+9 1.0000E+9     0.981      
+2019 1.0000E+9 1.0000E+9 1.0000E+9     0.980      
+2020 1.0000E+9 1.0000E+9 1.0000E+9     0.995      
+2021 1.0000E+9 1.0000E+9 1.0000E+9     0.991      
+2022 1.0000E+9 1.0000E+9 1.0000E+9     1.006      
+2023 1.0000E+9 1.0000E+9 1.0000E+9     0.977      
+2024 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
+2025 1.0000E+9 1.0000E+9 1.0000E+9     0.959      
+2026 1.0000E+9 1.0000E+9 1.0000E+9     0.973      
+2027 1.0000E+9 1.0000E+9 1.0000E+9     0.942      
+2028 1.0000E+9 1.0000E+9 1.0000E+9     0.957      
+2029 1.0000E+9 1.0000E+9 1.0000E+9     0.971      
+2030 1.0000E+9 1.0000E+9 1.0000E+9     0.986      
+2031 1.0000E+9 1.0000E+9 1.0000E+9     0.958      
+2032 1.0000E+9 1.0000E+9 1.0000E+9     0.926      
+2033 1.0000E+9 1.0000E+9 1.0000E+9     0.895      
+2034 1.0000E+9 1.0000E+9 1.0000E+9     0.864      
+2035 1.0000E+9 1.0000E+9 1.0000E+9     0.835      
+2036 1.0000E+9 1.0000E+9 1.0000E+9     0.807      
 2037 1.0000E+9 1.0000E+9 1.0000E+9     0.780      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.754      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.729      
+2038 1.0000E+9 1.0000E+9 1.0000E+9     0.753      
+2039 1.0000E+9 1.0000E+9 1.0000E+9     0.728      
 
 ---- EQU Final  Horison constraint
 
         LOWER     LEVEL     UPPER    MARGINAL
 
-2039      .         .         .       -0.729      
+2039      .         .         .       -0.728      
+
+                       LOWER     LEVEL     UPPER    MARGINAL
+
+---- EQU MismatchU      -INF       .    5.4176E+8      .         
+---- EQU MismatchL       .         .        +INF      0.999      
+---- EQU Mismatchd~ 2.188E+10 2.188E+10 2.188E+10     0.001      
+---- EQU objfunc         .         .         .        1.000      
+
+  MismatchU  Asset Liabilities Mismatch upper bound
+  MismatchL  Asset Liabilities Mismtach lower bound
+  Mismatchdef  Mismatch Definition
+  objfunc  Objective Func
 
 ---- VAR x  Face value purchased
 
@@ -2712,7 +1004,7 @@ Objective : 21200048181.154640
 
 DK0009923641      .         .        +INF      0.017      
 DK0009923484      .         .        +INF      0.023      
-DK0009921942      .    8.4290E+8     +INF       .         
+DK0009921942      .    1.3662E+9     +INF       .         
 DK0009922403      .    9.1373E+8     +INF       .         
 DK0009922676      .    9.8013E+8     +INF       .         
 DK0009922916      .         .        +INF      0.091      
@@ -2726,7 +1018,7 @@ DK0009922320      .    7.0698E+9     +INF       .
 
         LOWER     LEVEL     UPPER    MARGINAL
 
-2016      .         .        +INF      0.047      
+2016      .         .        +INF      0.048      
 2017      .    4.4162E+8     +INF       .         
 2018      .         .        +INF      0.015      
 2019      .    4.7873E+8     +INF       .         
@@ -2749,13 +1041,13 @@ DK0009922320      .    7.0698E+9     +INF       .
 2036      .         .        +INF      0.039      
 2037      .         .        +INF      0.038      
 2038      .         .        +INF      0.036      
-2039      .         .        +INF      0.729      
+2039      .         .        +INF      0.728      
 
 ---- VAR borrow  Amount of money borrowed
 
         LOWER     LEVEL     UPPER    MARGINAL
 
-2016      .         .        +INF      0.001      
+2016      .    5.2580E+8     +INF       .         
 2017      .         .        +INF      0.049      
 2018      .         .        +INF      0.034      
 2019      .         .        +INF      0.050      
@@ -2783,1879 +1075,63 @@ DK0009922320      .    7.0698E+9     +INF       .
                        LOWER     LEVEL     UPPER    MARGINAL
 
 ---- VAR v0             -INF  2.120E+10     +INF       .         
+---- VAR mm             -INF       .        +INF       .         
+---- VAR z              -INF  2.120E+10     +INF       .         
 
   v0  Upfront investment
+  mm  Mismatch
+  z  objvalue
 
 
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 38
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 0.99*surplus(2016) - surplus(2017) - 1.045*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 0.99*surplus(2017)
-     
-      - surplus(2018) - 1.045*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 1002208112.42305, INFES = 2208112.42304778 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 0.99*surplus(2018) - surplus(2019)
-     
-      - 1.045*borrow(2018) + borrow(2019) =E= 1000000000 ; (LHS = 1000000000)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 39
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0170791784063637)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0231902662534168)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 842904453.798081, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0471072115384615)
-       -1       Initial(2016)
-        0.99    CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 441622484.609574, +INF, 0)
-       -1       CashFlowCon(2017)
-        0.99    CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0152083511361248)
-       -1       CashFlowCon(2018)
-        0.99    CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.00126298076923059)
-        1       Initial(2016)
-       -1.045   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0491067942210073)
-        1       CashFlowCon(2017)
-       -1.045   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0338742647666174)
-        1       CashFlowCon(2018)
-       -1.045   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 21200048181.1546, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 40
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   7
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 7
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 41
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      1 Optimal                   
-**** OBJECTIVE VALUE      21351037333.1785
-
- RESOURCE USAGE, LIMIT          0.047      1000.000
- ITERATION COUNT, LIMIT         1    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(1): optimal
-Cplex Time: 0.00sec (det. 0.10 ticks)
-Optimal solution found.
-Objective : 21351037333.178547
-
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.977      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.982      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     0.992      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.992      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     1.002      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.988      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.946      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.955      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.965      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.953      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.963      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.972      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.982      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.982      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.940      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.899      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.861      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.824      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.788      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.754      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.722      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.722      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.022      
-DK0009923484      .         .        +INF      0.028      
-DK0009921942      .    8.6350E+8     +INF       .         
-DK0009922403      .    9.3585E+8     +INF       .         
-DK0009922676      .    1.0037E+9     +INF       .         
-DK0009922916      .         .        +INF      0.081      
-DK0009918138      .    2.4433E+9     +INF       .         
-DK0009923567      .    3.5698E+9     +INF       .         
-DK0009923054      .         .        +INF      0.003      
-DK0009923138      .         .        +INF      0.015      
-DK0009922320      .    6.5959E+9     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.042      
-2017      .    4.5128E+8     +INF       .         
-2018      .         .        +INF      0.005      
-2019      .    4.8909E+8     +INF       .         
-2020      .         .        +INF      0.009      
-2021      .    5.1950E+8     +INF       .         
-2022      .         .        +INF      0.024      
-2023      .         .        +INF      0.052      
-2024      .    1.3915E+9     +INF       .         
-2025      .    6.9226E+8     +INF       .         
-2026      .         .        +INF      0.031      
-2027      .    2.8845E+9     +INF       .         
-2028      .    2.1525E+9     +INF       .         
-2029      .    1.4278E+9     +INF       .         
-2030      .    7.1029E+8     +INF       .         
-2031      .         .        +INF      0.010      
-2032      .         .        +INF      0.052      
-2033      .         .        +INF      0.049      
-2034      .         .        +INF      0.047      
-2035      .         .        +INF      0.045      
-2036      .         .        +INF      0.043      
-2037      .         .        +INF      0.041      
-2038      .         .        +INF      0.040      
-2039      .         .        +INF      0.722      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.011      
-2017      .         .        +INF      0.054      
-2018      .         .        +INF      0.049      
-2019      .         .        +INF      0.055      
-2020      .         .        +INF      0.045      
-2021      .         .        +INF      0.055      
-2022      .         .        +INF      0.030      
-2023      .    5.1431E+8     +INF       .         
-2024      .         .        +INF      0.053      
-2025      .         .        +INF      0.053      
-2026      .         .        +INF      0.021      
-2027      .         .        +INF      0.052      
-2028      .         .        +INF      0.053      
-2029      .         .        +INF      0.053      
-2030      .         .        +INF      0.054      
-2031      .         .        +INF      0.044      
-2032      .    7.0319E+8     +INF       .         
-2033      .    1.4380E+9     +INF       .         
-2034      .    2.2059E+9     +INF       .         
-2035      .    3.0084E+9     +INF       .         
-2036      .    3.8469E+9     +INF       .         
-2037      .    4.7232E+9     +INF       .         
-2038      .    5.6389E+9     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  2.135E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        0     NONOPT
-                             0 INFEASIBLE
-                             0  UNBOUNDED
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 42
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 0.995*surplus(2016) - surplus(2017) - 1.055*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 0.995*surplus(2017)
-     
-      - surplus(2018) - 1.055*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 1002256375.26536, INFES = 2256375.26535678 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 0.995*surplus(2018) - surplus(2019)
-     
-      - 1.055*borrow(2018) + borrow(2019) =E= 1000000000 ; (LHS = 1000000000)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 43
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0219438366777346)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0281629492035743)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 863497457.319197, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0422701923076924)
-       -1       Initial(2016)
-        0.995   CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 451275053.071339, +INF, 0)
-       -1       CashFlowCon(2017)
-        0.995   CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.00515093501583896)
-       -1       CashFlowCon(2018)
-        0.995   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0109370192307692)
-        1       Initial(2016)
-       -1.055   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0537446581196581)
-        1       CashFlowCon(2017)
-       -1.055   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0488504353819257)
-        1       CashFlowCon(2018)
-       -1.055   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 21351037333.1785, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 44
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   8
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 8
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 45
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      1 Optimal                   
-**** OBJECTIVE VALUE      21392453918.9252
-
- RESOURCE USAGE, LIMIT          0.047      1000.000
- ITERATION COUNT, LIMIT         5    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(1): optimal
-Cplex Time: 0.03sec (det. 0.11 ticks)
-Optimal solution found.
-Objective : 21392453918.925194
-
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.972      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.977      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     0.982      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.987      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     0.992      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.992      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.948      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.952      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.957      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.948      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.953      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.958      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.963      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.968      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.973      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.941      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.892      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.845      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.801      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.760      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.720      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.720      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.032      
-DK0009923484      .         .        +INF      0.033      
-DK0009921942      .    3.4025E+9     +INF       .         
-DK0009922403      .         .        +INF      0.005      
-DK0009922676      .         .        +INF      0.006      
-DK0009922916      .         .        +INF      0.078      
-DK0009918138      .    2.0750E+9     +INF       .         
-DK0009923567      .    5.3979E+9     +INF       .         
-DK0009923054      .    5.8240E+8     +INF       .         
-DK0009923138      .         .        +INF      0.018      
-DK0009922320      .    5.2582E+9     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.037      
-2017      .    2.9562E+9     +INF       .         
-2018      .    2.3590E+9     +INF       .         
-2019      .    1.7648E+9     +INF       .         
-2020      .    1.1736E+9     +INF       .         
-2021      .    5.8533E+8     +INF       .         
-2022      .         .        +INF      0.005      
-2023      .         .        +INF      0.049      
-2024      .    1.4839E+9     +INF       .         
-2025      .    7.4009E+8     +INF       .         
-2026      .         .        +INF      0.018      
-2027      .    4.6615E+9     +INF       .         
-2028      .    3.8748E+9     +INF       .         
-2029      .    3.0921E+9     +INF       .         
-2030      .    2.3132E+9     +INF       .         
-2031      .    1.5383E+9     +INF       .         
-2032      .    7.6722E+8     +INF       .         
-2033      .         .        +INF      0.036      
-2034      .         .        +INF      0.054      
-2035      .         .        +INF      0.051      
-2036      .         .        +INF      0.048      
-2037      .         .        +INF      0.046      
-2038      .         .        +INF      0.043      
-2039      .         .        +INF      0.720      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.021      
-2017      .         .        +INF      0.058      
-2018      .         .        +INF      0.059      
-2019      .         .        +INF      0.059      
-2020      .         .        +INF      0.059      
-2021      .         .        +INF      0.060      
-2022      .         .        +INF      0.054      
-2023      .         .        +INF      0.008      
-2024      .         .        +INF      0.057      
-2025      .         .        +INF      0.057      
-2026      .         .        +INF      0.038      
-2027      .         .        +INF      0.057      
-2028      .         .        +INF      0.057      
-2029      .         .        +INF      0.057      
-2030      .         .        +INF      0.058      
-2031      .         .        +INF      0.058      
-2032      .         .        +INF      0.058      
-2033      .         .        +INF      0.020      
-2034      .    7.6338E+8     +INF       .         
-2035      .    1.5687E+9     +INF       .         
-2036      .    2.4184E+9     +INF       .         
-2037      .    3.3148E+9     +INF       .         
-2038      .    4.2605E+9     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  2.139E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        0     NONOPT
-                             0 INFEASIBLE
-                             0  UNBOUNDED
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 46
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + surplus(2016) - surplus(2017) - 1.065*borrow(2016) + borrow(2017) =E= 
-     1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + surplus(2017)
-     
-      - surplus(2018) - 1.065*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 1014781032.30161, INFES = 14781032.3016062 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + surplus(2018) - surplus(2019)
-     
-      - 1.065*borrow(2018) + borrow(2019) =E= 1000000000 ;
-     
-      (LHS = 1011795115.59721, INFES = 11795115.5972099 ****)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 47
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0316915642447274)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0330856554406651)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 3402508431.63361, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0374331730769231)
-       -1       Initial(2016)
-        1       CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 2956206460.32129, +INF, 0)
-       -1       CashFlowCon(2017)
-        1       CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 2359023119.44201, +INF, 0)
-       -1       CashFlowCon(2018)
-        1       CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0206110576923075)
-        1       Initial(2016)
-       -1.065   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0583359103208347)
-        1       CashFlowCon(2017)
-       -1.065   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.058629055598829)
-        1       CashFlowCon(2018)
-       -1.065   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 21392453918.9252, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 48
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   9
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.015 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 9
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 49
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      1 Optimal                   
-**** OBJECTIVE VALUE      21308373472.5067
-
- RESOURCE USAGE, LIMIT          0.032      1000.000
- ITERATION COUNT, LIMIT         2    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(1): optimal
-Cplex Time: 0.00sec (det. 0.10 ticks)
-Optimal solution found.
-Objective : 21308373472.506691
-
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.954      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.954      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.954      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.931      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.874      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.821      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.771      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.724      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.724      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.046      
-DK0009923484      .         .        +INF      0.038      
-DK0009921942      .    4.1350E+9     +INF       .         
-DK0009922403      .         .        +INF      0.015      
-DK0009922676      .         .        +INF      0.027      
-DK0009922916      .         .        +INF      0.102      
-DK0009918138      .    2.1431E+9     +INF       .         
-DK0009923567      .    6.3367E+9     +INF       .         
-DK0009923054      .         .        +INF      0.026      
-DK0009923138      .         .        +INF      0.018      
-DK0009922320      .    4.5324E+9     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.033      
-2017      .    3.6861E+9     +INF       .         
-2018      .    3.0717E+9     +INF       .         
-2019      .    2.4574E+9     +INF       .         
-2020      .    1.8430E+9     +INF       .         
-2021      .    1.2287E+9     +INF       .         
-2022      .    6.1435E+8     +INF       .         
-2023      .         .        +INF      0.013      
-2024      .    1.5287E+9     +INF       .         
-2025      .    7.6436E+8     +INF       .         
-2026      .         .        +INF      0.010      
-2027      .    5.5723E+9     +INF       .         
-2028      .    4.7763E+9     +INF       .         
-2029      .    3.9802E+9     +INF       .         
-2030      .    3.1842E+9     +INF       .         
-2031      .    2.3881E+9     +INF       .         
-2032      .    1.5921E+9     +INF       .         
-2033      .    7.9604E+8     +INF       .         
-2034      .         .        +INF      0.013      
-2035      .         .        +INF      0.057      
-2036      .         .        +INF      0.053      
-2037      .         .        +INF      0.050      
-2038      .         .        +INF      0.047      
-2039      .         .        +INF      0.724      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.030      
-2017      .         .        +INF      0.063      
-2018      .         .        +INF      0.063      
-2019      .         .        +INF      0.063      
-2020      .         .        +INF      0.063      
-2021      .         .        +INF      0.063      
-2022      .         .        +INF      0.063      
-2023      .         .        +INF      0.049      
-2024      .         .        +INF      0.062      
-2025      .         .        +INF      0.062      
-2026      .         .        +INF      0.051      
-2027      .         .        +INF      0.061      
-2028      .         .        +INF      0.061      
-2029      .         .        +INF      0.061      
-2030      .         .        +INF      0.061      
-2031      .         .        +INF      0.061      
-2032      .         .        +INF      0.061      
-2033      .         .        +INF      0.061      
-2034      .         .        +INF      0.047      
-2035      .    7.9604E+8     +INF       .         
-2036      .    1.6438E+9     +INF       .         
-2037      .    2.5467E+9     +INF       .         
-2038      .    3.5083E+9     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  2.131E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        0     NONOPT
-                             0 INFEASIBLE
-                             0  UNBOUNDED
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 50
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 1.005*surplus(2016) - surplus(2017) - 1.075*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 1.005*surplus(2017)
-     
-      - surplus(2018) - 1.075*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 1018430350.93228, INFES = 18430350.9322772 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 1.005*surplus(2018) - surplus(2019)
-     
-      - 1.075*borrow(2018) + borrow(2019) =E= 1000000000 ;
-     
-      (LHS = 1015358625.7769, INFES = 15358625.776897 ****)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 51
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0464221153846154)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0379591346153847)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 4135014632.24174, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0325961538461539)
-       -1       Initial(2016)
-        1.005   CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 3686070186.45549, +INF, 0)
-       -1       CashFlowCon(2017)
-        1.005   CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 3071725155.37958, +INF, 0)
-       -1       CashFlowCon(2018)
-        1.005   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0302850961538461)
-        1       Initial(2016)
-       -1.075   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.06288125)
-        1       CashFlowCon(2017)
-       -1.075   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.06288125)
-        1       CashFlowCon(2018)
-       -1.075   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 21308373472.5067, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 52
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   10
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 10
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 53
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      1 Optimal                   
-**** OBJECTIVE VALUE      20863148968.8863
-
- RESOURCE USAGE, LIMIT          0.047      1000.000
- ITERATION COUNT, LIMIT         4    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(1): optimal
-Cplex Time: 0.03sec (det. 0.10 ticks)
-Optimal solution found.
-Objective : 20863148968.886345
-
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.963      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.958      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     0.953      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.948      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     0.944      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.939      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.934      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.930      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.925      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.920      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.916      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.911      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.907      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.902      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.898      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.893      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.889      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.884      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.880      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.860      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.800      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.744      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.744      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.061      
-DK0009923484      .         .        +INF      0.043      
-DK0009921942      .    1.602E+10     +INF       .         
-DK0009922403      .         .        +INF      0.026      
-DK0009922676      .         .        +INF      0.048      
-DK0009922916      .         .        +INF      0.131      
-DK0009918138      .         .        +INF      0.028      
-DK0009923567      .         .        +INF      0.025      
-DK0009923054      .         .        +INF      0.056      
-DK0009923138      .         .        +INF      0.045      
-DK0009922320      .    2.8206E+9     +INF       .         
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.028      
-2017      .    1.579E+10     +INF       .         
-2018      .    1.499E+10     +INF       .         
-2019      .    1.419E+10     +INF       .         
-2020      .    1.339E+10     +INF       .         
-2021      .    1.259E+10     +INF       .         
-2022      .    1.178E+10     +INF       .         
-2023      .    1.096E+10     +INF       .         
-2024      .    1.014E+10     +INF       .         
-2025      .    9.3218E+9     +INF       .         
-2026      .    8.4954E+9     +INF       .         
-2027      .    7.6648E+9     +INF       .         
-2028      .    6.8300E+9     +INF       .         
-2029      .    5.9911E+9     +INF       .         
-2030      .    5.1480E+9     +INF       .         
-2031      .    4.3006E+9     +INF       .         
-2032      .    3.4491E+9     +INF       .         
-2033      .    2.5932E+9     +INF       .         
-2034      .    1.7331E+9     +INF       .         
-2035      .    8.6873E+8     +INF       .         
-2036      .         .        +INF      0.016      
-2037      .         .        +INF      0.056      
-2038      .         .        +INF      0.052      
-2039      .         .        +INF      0.744      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.040      
-2017      .         .        +INF      0.067      
-2018      .         .        +INF      0.067      
-2019      .         .        +INF      0.067      
-2020      .         .        +INF      0.066      
-2021      .         .        +INF      0.066      
-2022      .         .        +INF      0.066      
-2023      .         .        +INF      0.065      
-2024      .         .        +INF      0.065      
-2025      .         .        +INF      0.065      
-2026      .         .        +INF      0.064      
-2027      .         .        +INF      0.064      
-2028      .         .        +INF      0.064      
-2029      .         .        +INF      0.063      
-2030      .         .        +INF      0.063      
-2031      .         .        +INF      0.063      
-2032      .         .        +INF      0.063      
-2033      .         .        +INF      0.062      
-2034      .         .        +INF      0.062      
-2035      .         .        +INF      0.062      
-2036      .         .        +INF      0.044      
-2037      .    8.7307E+8     +INF       .         
-2038      .    1.8116E+9     +INF       .         
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  2.086E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        0     NONOPT
-                             0 INFEASIBLE
-                             0  UNBOUNDED
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 54
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 1.01*surplus(2016) - surplus(2017) - 1.085*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 1000000000)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 1.01*surplus(2017)
-     
-      - surplus(2018) - 1.085*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 1078936186.43365, INFES = 78936186.4336452 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 1.01*surplus(2018) - surplus(2019)
-     
-      - 1.085*borrow(2018) + borrow(2019) =E= 1000000000 ;
-     
-      (LHS = 1074965496.75949, INFES = 74965496.759491 ****)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 55
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0608612179126919)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0427841214600077)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 16019530199.9933, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0277591346153847)
-       -1       Initial(2016)
-        1.01    CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 15787237286.7285, +INF, 0)
-       -1       CashFlowCon(2017)
-        1.01    CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 14993099351.8976, +INF, 0)
-       -1       CashFlowCon(2018)
-        1.01    CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0399591346153845)
-        1       Initial(2016)
-       -1.085   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0673813624186759)
-        1       CashFlowCon(2017)
-       -1.085   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0670461317598767)
-        1       CashFlowCon(2018)
-       -1.085   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 20863148968.8863, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 56
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   11
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 11
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 57
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      1 Optimal                   
-**** OBJECTIVE VALUE      19986930437.9705
-
- RESOURCE USAGE, LIMIT          0.047      1000.000
- ITERATION COUNT, LIMIT         4    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(1): optimal
-Cplex Time: 0.05sec (det. 0.10 ticks)
-Optimal solution found.
-Objective : 19986930437.970528
-
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.958      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.948      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     0.939      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.930      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     0.920      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.911      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.902      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.893      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.885      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.876      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.867      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.859      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.850      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.842      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.833      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.825      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.817      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.809      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.801      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.793      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.785      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.777      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.777      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.075      
-DK0009923484      .         .        +INF      0.048      
-DK0009921942      .    1.987E+10     +INF       .         
-DK0009922403      .         .        +INF      0.036      
-DK0009922676      .         .        +INF      0.068      
-DK0009922916      .         .        +INF      0.158      
-DK0009918138      .         .        +INF      0.069      
-DK0009923567      .         .        +INF      0.071      
-DK0009923054      .         .        +INF      0.085      
-DK0009923138      .         .        +INF      0.084      
-DK0009922320      .         .        +INF      0.006      
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.023      
-2017      .    1.966E+10     +INF       .         
-2018      .    1.886E+10     +INF       .         
-2019      .    1.805E+10     +INF       .         
-2020      .    1.723E+10     +INF       .         
-2021      .    1.640E+10     +INF       .         
-2022      .    1.556E+10     +INF       .         
-2023      .    1.472E+10     +INF       .         
-2024      .    1.387E+10     +INF       .         
-2025      .    1.300E+10     +INF       .         
-2026      .    1.213E+10     +INF       .         
-2027      .    1.126E+10     +INF       .         
-2028      .    1.037E+10     +INF       .         
-2029      .    9.4713E+9     +INF       .         
-2030      .    8.5660E+9     +INF       .         
-2031      .    7.6517E+9     +INF       .         
-2032      .    6.7282E+9     +INF       .         
-2033      .    5.7955E+9     +INF       .         
-2034      .    4.8534E+9     +INF       .         
-2035      .    3.9020E+9     +INF       .         
-2036      .    2.9410E+9     +INF       .         
-2037      .    1.9704E+9     +INF       .         
-2038      .    9.9010E+8     +INF       .         
-2039      .         .        +INF      0.777      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.050      
-2017      .         .        +INF      0.072      
-2018      .         .        +INF      0.071      
-2019      .         .        +INF      0.070      
-2020      .         .        +INF      0.070      
-2021      .         .        +INF      0.069      
-2022      .         .        +INF      0.068      
-2023      .         .        +INF      0.068      
-2024      .         .        +INF      0.067      
-2025      .         .        +INF      0.066      
-2026      .         .        +INF      0.066      
-2027      .         .        +INF      0.065      
-2028      .         .        +INF      0.064      
-2029      .         .        +INF      0.064      
-2030      .         .        +INF      0.063      
-2031      .         .        +INF      0.062      
-2032      .         .        +INF      0.062      
-2033      .         .        +INF      0.061      
-2034      .         .        +INF      0.061      
-2035      .         .        +INF      0.060      
-2036      .         .        +INF      0.059      
-2037      .         .        +INF      0.059      
-2038      .         .        +INF      0.058      
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  1.999E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        0     NONOPT
-                             0 INFEASIBLE
-                             0  UNBOUNDED
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 58
-Dedication models
-Equation Listing    SOLVE Dedication Using LP From line 159
-
-
----- Initial  =E=  Initialization of the investment
-
-Initial(2016)..  - 1.0235*x(DK0009923641) - 1.0102*x(DK0009923484)
-     
-      - 1.0061*x(DK0009921942) - 1.0989*x(DK0009922403) - 1.1395*x(DK0009922676)
-     
-      - 1.0763*x(DK0009922916) - 1.4949*x(DK0009918138) - 0.9971*x(DK0009923567)
-     
-      - 1.0946*x(DK0009923054) - 1.1239*x(DK0009923138) - 1.6826*x(DK0009922320)
-     
-      - surplus(2016) + borrow(2016) + v0 =E= 0 ; (LHS = 0)
-     
-
----- CashFlowCon  =E=  Equations defining the cashflow balance
-
-CashFlowCon(2017)..  0.0025*x(DK0009923641) + 0.0025*x(DK0009923484)
-     
-      + 1.04*x(DK0009921942) + 0.04*x(DK0009922403) + 0.03*x(DK0009922676)
-     
-      + 0.001*x(DK0009922916) + 0.07*x(DK0009918138) + 0.005*x(DK0009923567)
-     
-      + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320)
-     
-      + 1.015*surplus(2016) - surplus(2017) - 1.095*borrow(2016) + borrow(2017)
-      =E= 1000000000 ; (LHS = 999999999.999996)
-     
-CashFlowCon(2018)..  0.0025*x(DK0009923641) + 1.0025*x(DK0009923484)
-     
-      + 0.04*x(DK0009922403) + 0.03*x(DK0009922676) + 0.001*x(DK0009922916)
-     
-      + 0.07*x(DK0009918138) + 0.005*x(DK0009923567) + 0.015*x(DK0009923054)
-     
-      + 0.0175*x(DK0009923138) + 0.045*x(DK0009922320) + 1.015*surplus(2017)
-     
-      - surplus(2018) - 1.095*borrow(2017) + borrow(2018) =E= 1000000000 ;
-     
-      (LHS = 1098301896.70753, INFES = 98301896.7075272 ****)
-     
-CashFlowCon(2019)..  0.0025*x(DK0009923641) + 1.04*x(DK0009922403)
-     
-      + 0.03*x(DK0009922676) + 0.001*x(DK0009922916) + 0.07*x(DK0009918138)
-     
-      + 0.005*x(DK0009923567) + 0.015*x(DK0009923054) + 0.0175*x(DK0009923138)
-     
-      + 0.045*x(DK0009922320) + 1.015*surplus(2018) - surplus(2019)
-     
-      - 1.095*borrow(2018) + borrow(2019) =E= 1000000000 ;
-     
-      (LHS = 1094284915.6746, INFES = 94284915.6746025 ****)
-     
-REMAINING 20 ENTRIES SKIPPED
-
-
----- Final  =E=  Horison constraint
-
-Final(2039)..  borrow(2039) =E= 0 ; (LHS = 0)
-     
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 59
-Dedication models
-Column Listing      SOLVE Dedication Using LP From line 159
-
-
----- x  Face value purchased
-
-x(DK0009923641)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0750160472379785)
-       -1.0235  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        0.0025  CashFlowCon(2018)
-        0.0025  CashFlowCon(2019)
-        1.0025  CashFlowCon(2020)
-
-x(DK0009923484)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0475613361576543)
-       -1.0102  Initial(2016)
-        0.0025  CashFlowCon(2017)
-        1.0025  CashFlowCon(2018)
-
-x(DK0009921942)
-                (.LO, .L, .UP, .M = 0, 19865749366.8328, +INF, 0)
-       -1.0061  Initial(2016)
-        1.04    CashFlowCon(2017)
-
-REMAINING 8 ENTRIES SKIPPED
-
----- surplus  Amount of money reinvested
-
-surplus(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0229221153846154)
-       -1       Initial(2016)
-        1.015   CashFlowCon(2017)
-
-surplus(2017)
-                (.LO, .L, .UP, .M = 0, 19660379341.5062, +INF, 0)
-       -1       CashFlowCon(2017)
-        1.015   CashFlowCon(2018)
-
-surplus(2018)
-                (.LO, .L, .UP, .M = 0, 18856983134.9212, +INF, 0)
-       -1       CashFlowCon(2018)
-        1.015   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- borrow  Amount of money borrowed
-
-borrow(2016)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0496331730769231)
-        1       Initial(2016)
-       -1.095   CashFlowCon(2017)
-
-borrow(2017)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0718369192688499)
-        1       CashFlowCon(2017)
-       -1.095   CashFlowCon(2018)
-
-borrow(2018)
-                (.LO, .L, .UP, .M = 0, 0, +INF, 0.0711256626424256)
-        1       CashFlowCon(2018)
-       -1.095   CashFlowCon(2019)
-
-REMAINING 21 ENTRIES SKIPPED
-
----- v0  Upfront investment
-
-v0
-                (.LO, .L, .UP, .M = -INF, 19986930437.9705, +INF, 0)
-        1       Initial(2016)
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 60
-Dedication models
-Model Statistics    SOLVE Dedication Using LP From line 159
-
-
-LOOPS                            FOR/WHILE   12
-
-
-MODEL STATISTICS
-
-BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           25
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           60
-NON ZERO ELEMENTS           187
-
-
-GENERATION TIME      =        0.015 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-
-
-EXECUTION TIME       =        0.015 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
-               L O O P S          FOR/WHILE 12
-
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 61
-Dedication models
-Solution Report     SOLVE Dedication Using LP From line 159
-
-
-               S O L V E      S U M M A R Y
-
-     MODEL   Dedication          OBJECTIVE  v0
-     TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  159
-
-**** SOLVER STATUS     1 Normal Completion         
-**** MODEL STATUS      1 Optimal                   
-**** OBJECTIVE VALUE      18981260958.8374
-
- RESOURCE USAGE, LIMIT          0.016      1000.000
- ITERATION COUNT, LIMIT         0    2000000000
-
-IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
-Cplex 12.7.1.0
-
-Space for names approximately 0.00 Mb
-Use option 'names no' to turn use of names off
-LP status(1): optimal
-Cplex Time: 0.00sec (det. 0.08 ticks)
-Optimal solution found.
-Objective : 18981260958.837368
-
-
----- EQU Initial  Initialization of the investment
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .         .        1.000      
-
----- EQU CashFlowCon  Equations defining the cashflow balance
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2017 1.0000E+9 1.0000E+9 1.0000E+9     0.967      
-2018 1.0000E+9 1.0000E+9 1.0000E+9     0.953      
-2019 1.0000E+9 1.0000E+9 1.0000E+9     0.939      
-2020 1.0000E+9 1.0000E+9 1.0000E+9     0.925      
-2021 1.0000E+9 1.0000E+9 1.0000E+9     0.911      
-2022 1.0000E+9 1.0000E+9 1.0000E+9     0.898      
-2023 1.0000E+9 1.0000E+9 1.0000E+9     0.885      
-2024 1.0000E+9 1.0000E+9 1.0000E+9     0.872      
-2025 1.0000E+9 1.0000E+9 1.0000E+9     0.859      
-2026 1.0000E+9 1.0000E+9 1.0000E+9     0.846      
-2027 1.0000E+9 1.0000E+9 1.0000E+9     0.834      
-2028 1.0000E+9 1.0000E+9 1.0000E+9     0.821      
-2029 1.0000E+9 1.0000E+9 1.0000E+9     0.809      
-2030 1.0000E+9 1.0000E+9 1.0000E+9     0.797      
-2031 1.0000E+9 1.0000E+9 1.0000E+9     0.785      
-2032 1.0000E+9 1.0000E+9 1.0000E+9     0.774      
-2033 1.0000E+9 1.0000E+9 1.0000E+9     0.762      
-2034 1.0000E+9 1.0000E+9 1.0000E+9     0.751      
-2035 1.0000E+9 1.0000E+9 1.0000E+9     0.740      
-2036 1.0000E+9 1.0000E+9 1.0000E+9     0.729      
-2037 1.0000E+9 1.0000E+9 1.0000E+9     0.718      
-2038 1.0000E+9 1.0000E+9 1.0000E+9     0.708      
-2039 1.0000E+9 1.0000E+9 1.0000E+9     0.697      
-
----- EQU Final  Horison constraint
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2039      .         .         .       -0.697      
-
----- VAR x  Face value purchased
-
-                LOWER     LEVEL     UPPER    MARGINAL
-
-DK0009923641      .         .        +INF      0.089      
-DK0009923484      .         .        +INF      0.052      
-DK0009921942      .    1.887E+10     +INF       .         
-DK0009922403      .         .        +INF      0.045      
-DK0009922676      .         .        +INF      0.087      
-DK0009922916      .         .        +INF      0.185      
-DK0009918138      .         .        +INF      0.109      
-DK0009923567      .         .        +INF      0.114      
-DK0009923054      .         .        +INF      0.113      
-DK0009923138      .         .        +INF      0.121      
-DK0009922320      .         .        +INF      0.131      
-
----- VAR surplus  Amount of money reinvested
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.018      
-2017      .    1.862E+10     +INF       .         
-2018      .    1.790E+10     +INF       .         
-2019      .    1.717E+10     +INF       .         
-2020      .    1.643E+10     +INF       .         
-2021      .    1.567E+10     +INF       .         
-2022      .    1.491E+10     +INF       .         
-2023      .    1.413E+10     +INF       .         
-2024      .    1.334E+10     +INF       .         
-2025      .    1.254E+10     +INF       .         
-2026      .    1.173E+10     +INF       .         
-2027      .    1.091E+10     +INF       .         
-2028      .    1.007E+10     +INF       .         
-2029      .    9.2222E+9     +INF       .         
-2030      .    8.3605E+9     +INF       .         
-2031      .    7.4859E+9     +INF       .         
-2032      .    6.5982E+9     +INF       .         
-2033      .    5.6972E+9     +INF       .         
-2034      .    4.7826E+9     +INF       .         
-2035      .    3.8544E+9     +INF       .         
-2036      .    2.9122E+9     +INF       .         
-2037      .    1.9559E+9     +INF       .         
-2038      .    9.8522E+8     +INF       .         
-2039      .         .        +INF      0.697      
-
----- VAR borrow  Amount of money borrowed
-
-        LOWER     LEVEL     UPPER    MARGINAL
-
-2016      .         .        +INF      0.059      
-2017      .         .        +INF      0.076      
-2018      .         .        +INF      0.075      
-2019      .         .        +INF      0.074      
-2020      .         .        +INF      0.073      
-2021      .         .        +INF      0.072      
-2022      .         .        +INF      0.071      
-2023      .         .        +INF      0.070      
-2024      .         .        +INF      0.069      
-2025      .         .        +INF      0.068      
-2026      .         .        +INF      0.067      
-2027      .         .        +INF      0.066      
-2028      .         .        +INF      0.065      
-2029      .         .        +INF      0.064      
-2030      .         .        +INF      0.063      
-2031      .         .        +INF      0.062      
-2032      .         .        +INF      0.061      
-2033      .         .        +INF      0.060      
-2034      .         .        +INF      0.059      
-2035      .         .        +INF      0.058      
-2036      .         .        +INF      0.057      
-2037      .         .        +INF      0.057      
-2038      .         .        +INF      0.056      
-2039      .         .        +INF       .         
-
-                       LOWER     LEVEL     UPPER    MARGINAL
-
----- VAR v0             -INF  1.898E+10     +INF       .         
-
-  v0  Upfront investment
-
-
-**** REPORT SUMMARY :        0     NONOPT
-                             0 INFEASIBLE
-                             0  UNBOUNDED
-GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/26/17 03:03:05 Page 62
+GAMS 24.8.5  r61358 Released May 10, 2017 WEX-WEI x86 64bit/MS Windows 10/29/17 22:16:05 Page 13
 Dedication models
 E x e c u t i o n
 
 
-**** REPORT FILE SUMMARY
+----    288 VARIABLE v0.L                  =  2.12007E+10  Upfront investment
 
-DedicationHandle C:\Users\khoongwh\Documents\gamsdir\projdir\DedicationPortfolio
-                 s.csv
+----    288 VARIABLE borrow.L  Amount of money borrowed
+
+2016 5.257985E+8,    2023 5.009510E+8,    2031 6.818574E+8,    2032 1.387580E+9
+2033 2.118002E+9,    2034 2.873990E+9,    2035 3.656437E+9,    2036 4.466270E+9
+2037 5.304447E+9,    2038 6.171960E+9
 
 
-EXECUTION TIME       =        0.000 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+----    288 VARIABLE surplus.L  Amount of money reinvested
+
+2017 4.416225E+8,    2019 4.787281E+8,    2021 5.085797E+8,    2024 1.366621E+9
+2025 6.781472E+8,    2027 2.108509E+9,    2028 1.395024E+9,    2029 6.922410E+8
 
 
-USER: Course License Fall 2017                       A170809:0923AO-GEN
-      Technical University of Denmark, Management Engineering    DC8756
-      License for teaching and research at degree granting institutions
+----    288 VARIABLE x.L  Face value purchased
+
+DK0009921942 1.366175E+9,    DK0009922403 9.137263E+8
+DK0009922676 9.801269E+8,    DK0009918138 2.386057E+9
+DK0009923567 2.776484E+9,    DK0009922320 7.069836E+9
+
+
+----    288 VARIABLE mm.L                  =        0.000  Mismatch
+            PARAMETER NPVA                 =  2.18788E+10  Net Present Value of 
+                                                           Assets
+            PARAMETER PV_Liab              =  2.18788E+10  Present value of liab
+                                                           ility
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  24.8.5 r61358 WEX-WEI
+
+
+USER: GAMS Development Corporation, Washington, DC   G871201/0000CA-ANY
+      Free Demo,  202-342-0180,  sales@gams.com,  www.gams.com   DC0000
 
 
 **** FILE SUMMARY
 
-Input      C:\Users\khoongwh\Desktop\Wei Hao\NUS\Applied Mathematics Major\Modul
-           es\Year 3 Semester 1 (On Exchange)\42123 Optimization in Finance (ST4
-           245 Statistical Methods for Finance)\Projects\Dedication.gms
-Output     C:\Users\khoongwh\Documents\gamsdir\projdir\Dedication.lst
+Input      C:\Users\Leonard Lee\OneDrive\Documents\University Files\Core Modules
+           \Math & Stats Modules\Year 3\Sem 1(SEP)\Optimization in Finance\Proje
+           ct\Dedication.gms
+Output     C:\Users\Leonard Lee\OneDrive\Documents\University Files\Core Modules
+           \Math & Stats Modules\Year 3\Sem 1(SEP)\Optimization in Finance\Proje
+           ct\Dedication.lst
