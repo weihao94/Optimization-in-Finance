@@ -1,0 +1,872 @@
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 1
+Immunization models
+C o m p i l a t i o n
+
+
+   2   
+   3  * Immunization.gms: Immunization models.
+   4  * Consiglio, Nielsen and Zenios.
+   5  * PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 4.4
+   6  * Last modified: Apr 2008.
+   7   
+   8  SET Time Time periods /2016 * 2039/;
+   9   
+  10  ALIAS (Time, t, t1, t2);
+  11   
+  12  SCALARS
+  13     Now      Current year
+  14     Horizon  End of the Horizon;
+  15   
+  16  Now = 2016;
+  17  Horizon = CARD(t)-1;
+  18   
+  19  PARAMETER
+  20     tau(t) Time in years;
+  21   
+  22  * Note: time starts from 0
+  23   
+  24  tau(t)  = ORD(t)-1;
+  25   
+  26  SET
+  27     Bonds Bonds universe
+  28      /DK0009923641, DK0009923484, DK0009921942,
+  29       DK0009922403, DK0009922676, DK0009922916,
+  30       DK0009918138, DK0009923567, DK0009923054,
+  31       DK0009923138, DK0009922320/;
+  32   
+  33  ALIAS(Bonds, i);
+  34   
+  35  PARAMETERS
+  36           Coupon(i)      Coupons
+  37           Maturity(i)    Maturities
+  38           Liability(t)   Stream of liabilities
+  39           F(t,i)        Cashflows;
+  40   
+  41  * Bond data. Prices, coupons and maturities from the Danish market
+  42   
+INCLUDE    C:\Users\khoongwh\Documents\gamsdir\projdir\Bonds.inc
+  44  TABLE BondData(i,*)
+  45                            Price       Maturity      Coupon
+  46          DK0009923641      102.35       2020          0.25
+  47          DK0009923484      101.02       2018          0.25
+  48          DK0009921942      100.61       2017          4
+  49          DK0009922403      109.89       2019          4
+  50          DK0009922676      113.95       2021          3
+  51          DK0009922916      107.63       2023          0.1
+  52          DK0009918138      149.49       2024          7
+  53          DK0009923567      99.71        2027          0.5
+  54          DK0009923054      109.46       2023          1.5
+  55          DK0009923138      112.39       2025          1.75
+  56          DK0009922320      168.26       2039          4.5;
+  57   
+  58  * Copy/transform data. Note division by 100 to get unit data, and
+  59  * subtraction of "Now" from Maturity date (so consistent with tau):
+  60   
+  61  Coupon(i)   = BondData(i,"Coupon")/100;
+  62  Maturity(i) = BondData(i,"Maturity") - Now;
+  63   
+  64  * Calculate the ex-coupon cashflow of Bond i in year t:
+  65   
+  66  F(t,i) = 1$(tau(t) = Maturity(i))
+  67              +  coupon(i) $ (tau(t) <= Maturity(i) and tau(t) > 0);
+  68   
+  69  PARAMETER
+  70           Liability(t) Liabilities
+  71           /2016 = 1000000000, 2017 = 1000000000, 2018 = 1000000000,
+  72            2019 = 1000000000, 2020 = 1000000000, 2021 = 1000000000,
+  73            2022 = 1000000000, 2023 =  1000000000, 2024 = 1000000000,
+  74            2025 = 1000000000, 2026 = 1000000000, 2027 = 1000000000
+  75            2028 = 1000000000, 2029 = 1000000000, 2030 = 1000000000,
+  76            2031 = 1000000000, 2032 = 1000000000, 2033 = 1000000000,
+  77            2034 = 1000000000, 2035 = 1000000000, 2036 = 1000000000,
+  78            2037 = 1000000000, 2038 = 1000000000, 2039 = 1000000000/;
+  79   
+  80  * Read spot rates
+  81   
+  82  PARAMETER r(t)
+  83  /
+INCLUDE    C:\Users\khoongwh\Documents\gamsdir\projdir\SpotRates.inc
+  86  2017,0.0045
+  87  2018,0.0023
+  88  2019,0.0015
+  89  2020,0.0011
+  90  2021,0.0009
+  91  2022,0.0008
+  92  2023,0.0007
+  93  2024,0.0032
+  94  2025,0.0043
+  95  2026,0.0049
+  96  2027,0.0055
+  97  2028,0.0062
+  98  2029,0.0068
+  99  2030,0.0075
+ 100  2031,0.0082
+ 101  2032,0.0089
+ 102  2033,0.0096
+ 103  2034,0.0102
+ 104  2035,0.0108
+ 105  2036,0.0114
+ 106  2037,0.0119
+ 107  2038,0.0124
+ 108  2039,0.0129
+ 110  /;
+ 111   
+ 112  * Read yield rates
+ 113   
+ 114  PARAMETER y(i)
+ 115  /
+INCLUDE    C:\Users\khoongwh\Documents\gamsdir\projdir\YieldRates.inc
+ 118  DK0009923641,0.0000
+ 119  DK0009923484,0.0000
+ 120  DK0009921942,0.0000
+ 121  DK0009922403,0.0000
+ 122  DK0009922676,0.0000
+ 123  DK0009922916,0.0000
+ 124  DK0009918138,0.0063
+ 125  DK0009923567,0.0053
+ 126  DK0009923054,0.0014
+ 127  DK0009923138,0.0035
+ 128  DK0009922320,0.0111
+ 130  /;
+ 131   
+ 132   
+ 133  * The following are the Present value, Fischer-Weil duration (D^FW)
+ 134  * and Convexity (Q_i), for both the bonds and the liabilities:
+ 135   
+ 136   
+ 137  * Present value, Fisher & Weil duration, and convexity for
+ 138  * the bonds.
+ 139   
+ 140  PARAMETER
+ 141           PV(i)      Present value of assets
+ 142           Dur(i)     Duration of assets
+ 143           Conv(i)    Convexity of assets;
+ 144   
+ 145  * Present value, Fisher & Weil duration, and convexity for
+ 146  * the liability.
+ 147   
+ 148  PARAMETER
+ 149           PV_Liab    Present value of liability
+ 150           Dur_Liab   Duration of liability
+ 151           Conv_Liab  Convexity of liability;
+ 152   
+ 153   
+ 154  PV(i)   = SUM(t, F(t,i) * exp(-r(t) * tau(t)));
+ 155   
+ 156  Dur(i)  = ( 1.0 / PV(i) ) * SUM(t, tau(t) * F(t,i) * exp(-r(t) * tau(t)));
+ 157   
+ 158  Conv(i) = ( 1.0 / PV(i) ) * SUM(t, sqr(tau(t)) * F(t,i) * exp(-r(t) * tau(
+      t)));
+ 159   
+ 160  DISPLAY PV, Dur, Conv;
+ 161   
+ 162  * Calculate the corresponding amounts for Liabilities. Use its PV as its "
+      price".
+ 163   
+ 164  PV_Liab   = SUM(t, Liability(t) * exp(-r(t) * tau(t)));
+ 165   
+ 166  Dur_Liab  = ( 1.0 / PV_Liab ) * SUM(t, tau(t) * Liability(t) * exp(-r(t) *
+       tau(t)));
+ 167   
+ 168  Conv_Liab = ( 1.0 / PV_Liab ) * SUM(t, sqr(tau(t)) * Liability(t) * exp(-r
+      (t) * tau(t)));
+ 169   
+ 170  DISPLAY PV_Liab, Dur_Liab, Conv_Liab;
+ 171   
+ 172  * Build a sequence of increasingly sophisticated immunuzation models.
+ 173   
+ 174  POSITIVE VARIABLES
+ 175           x(i)                Holdings of bonds (amount of face value);
+ 176   
+ 177  VARIABLE
+ 178           z                   Objective function value;
+ 179   
+ 180  EQUATIONS
+ 181           PresentValueMatch   Equation matching the present value of asset 
+      and liability
+ 182           DurationMatch       Equation matching the duration of asset and l
+      iability
+ 183           ConvexityMatch      Equation matching the convexity of asset and 
+      liability
+ 184           ObjDef              Objective function definition;
+ 185   
+ 186  ObjDef ..              z =E= SUM(i, Dur(i) * PV(i) * y(i) * x(i)) / (PV_Li
+      ab * Dur_Liab);
+ 187   
+ 188  PresentValueMatch ..         SUM(i, PV(i) * x(i))               =E= PV_Lia
+      b;
+ 189   
+ 190  DurationMatch ..             SUM(i, Dur(i)  * PV(i) * x(i))  =E= PV_Liab *
+       Dur_Liab;
+ 191   
+ 192  ConvexityMatch ..            SUM(i, Conv(i) * PV(i) * x(i))  =G= PV_Liab *
+       Conv_Liab;
+ 193   
+ 194  MODEL ImmunizationOne 'PFO Model 4.3.1' /ObjDef, PresentValueMatch, Durati
+      onMatch/;
+ 195   
+ 196  SOLVE ImmunizationOne MAXIMIZING z USING LP;
+ 197   
+ 198  SCALAR Convexity;
+ 199   
+ 200  Convexity =  (1.0 / PV_Liab ) * SUM(i, Conv(i) * PV(i) * x.l(i));
+ 201   
+ 202  DISPLAY x.l,Convexity,Conv_Liab;
+ 203   
+ 204  MODEL ImmunizationTwo /ObjDef, PresentValueMatch, DurationMatch, Convexity
+      Match/;
+ 205   
+ 206  SOLVE ImmunizationTwo MAXIMIZING z USING LP;
+ 207   
+ 208  DurationMatch.L = DurationMatch.L / PV_Liab;
+ 209   
+ 210  ConvexityMatch.L = ConvexityMatch.L / PV_Liab;
+ 211   
+ 212  DISPLAY x.l,PresentValueMatch.L,DurationMatch.L,ConvexityMatch.L;
+ 213   
+ 214  EQUATION
+ 215           ConvexityObj;
+ 216   
+ 217  ConvexityObj ..    z =E= ( 1.0 / PV_Liab ) * SUM(i, Conv(i) * PV(i) * x(i)
+      );
+ 218   
+ 219  MODEL ImmunizationThree /ConvexityObj, PresentValueMatch, DurationMatch/
+ 220   
+ 221  SOLVE ImmunizationThree MINIMIZING z USING LP;
+ 222   
+ 223  DISPLAY x.l;
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 2
+Immunization models
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  C:\Users\khoongwh\Desktop\Wei Hao\NUS\
+                                          Applied Mathematics Major\Modules\Year
+                                          3 Semester 1 (On Exchange)\42123 Optim
+                                          ization in Finance (ST4245 Statistical
+                                          Methods for Finance)\Projects\Project_
+                                          Immunization.gms
+     2       43 INCLUDE        1      43  .C:\Users\khoongwh\Documents\gamsdir\p
+                                           rojdir\Bonds.inc
+     3       85 INCLUDE        1      72  .C:\Users\khoongwh\Documents\gamsdir\p
+                                           rojdir\SpotRates.inc
+     4      117 INCLUDE        1      81  .C:\Users\khoongwh\Documents\gamsdir\p
+                                           rojdir\YieldRates.inc
+
+
+COMPILATION TIME     =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 3
+Immunization models
+E x e c u t i o n
+
+
+----    160 PARAMETER PV  Present value of assets
+
+DK0009923641 1.006,    DK0009923484 1.000,    DK0009921942 1.035
+DK0009922403 1.115,    DK0009922676 1.145,    DK0009922916 1.002
+DK0009918138 1.531,    DK0009923567 0.995,    DK0009923054 1.100
+DK0009923138 1.118,    DK0009922320 1.682
+
+
+----    160 PARAMETER Dur  Duration of assets
+
+DK0009923641  3.985,    DK0009923484  1.998,    DK0009921942  1.000
+DK0009922403  2.893,    DK0009922676  4.739,    DK0009922916  6.979
+DK0009918138  6.725,    DK0009923567 10.726,    DK0009923054  6.715
+DK0009923138  8.439,    DK0009922320 16.527
+
+
+----    160 PARAMETER Conv  Convexity of assets
+
+DK0009923641  15.916,    DK0009923484   3.993,    DK0009921942   1.000
+DK0009922403   8.536,    DK0009922676  23.174,    DK0009922916  48.798
+DK0009918138  49.979,    DK0009923567 116.892,    DK0009923054  46.243
+DK0009923138  74.086,    DK0009922320 330.196
+
+
+----    170 PARAMETER PV_Liab              =  2.18694E+10  Present value of liab
+                                                           ility
+            PARAMETER Dur_Liab             =       10.883  Duration of liability
+            PARAMETER Conv_Liab            =      164.949  Convexity of liabilit
+                                                           y
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 4
+Immunization models
+Equation Listing    SOLVE ImmunizationOne Using LP From line 196
+
+
+---- ObjDef  =E=  Objective function definition
+
+ObjDef..  - 2.72497462629434E-13*x(DK0009918138)
+     
+      - 2.37721592727296E-13*x(DK0009923567)
+     
+      - 4.34335076353771E-14*x(DK0009923054)
+     
+      - 1.38733610663362E-13*x(DK0009923138)
+     
+      - 1.29677964538338E-12*x(DK0009922320) + z =E= 0 ; (LHS = 0)
+     
+
+---- PresentValueMatch  =E=  Equation matching the present value of asset and li
+                             ability
+
+PresentValueMatch..  1.00556476694145*x(DK0009923641)
+     
+      + 1.00038786548004*x(DK0009923484) + 1.03533051422275*x(DK0009921942)
+     
+      + 1.11496734116777*x(DK0009922403) + 1.14483662660266*x(DK0009922676)
+     
+      + 1.00207985946194*x(DK0009922916) + 1.53070682794154*x(DK0009918138)
+     
+      + 0.995284334638755*x(DK0009923567) + 1.09963009610746*x(DK0009923054)
+     
+      + 1.1178704465859*x(DK0009923138) + 1.68238814883985*x(DK0009922320) =E= 
+     21869359774.0861 ; (LHS = 0, INFES = 21869359774.0861 ****)
+     
+
+---- DurationMatch  =E=  Equation matching the duration of asset and liability
+
+DurationMatch..  4.00732691384854*x(DK0009923641)
+     
+      + 1.9982869556855*x(DK0009923484) + 1.03533051422275*x(DK0009921942)
+     
+      + 3.22544479216512*x(DK0009922403) + 5.42553607252779*x(DK0009922676)
+     
+      + 6.99365380159759*x(DK0009922916) + 10.2945384157861*x(DK0009918138)
+     
+      + 10.6752419549753*x(DK0009923567) + 7.38383245321255*x(DK0009923054)
+     
+      + 9.43405948575158*x(DK0009923138) + 27.8053375493034*x(DK0009922320) =E= 
+     238004388714.801 ; (LHS = 0, INFES = 238004388714.801 ****)
+     
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 5
+Immunization models
+Column Listing      SOLVE ImmunizationOne Using LP From line 196
+
+
+---- x  Holdings of bonds (amount of face value)
+
+x(DK0009923641)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1.0056  PresentValueMatch
+        4.0073  DurationMatch
+
+x(DK0009923484)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1.0004  PresentValueMatch
+        1.9983  DurationMatch
+
+x(DK0009921942)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1.0353  PresentValueMatch
+        1.0353  DurationMatch
+
+REMAINING 8 ENTRIES SKIPPED
+
+---- z  Objective function value
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjDef
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 6
+Immunization models
+Model Statistics    SOLVE ImmunizationOne Using LP From line 196
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS            3
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           12
+NON ZERO ELEMENTS            28
+
+
+GENERATION TIME      =        0.078 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
+
+
+EXECUTION TIME       =        0.078 SECONDS      4 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 7
+Immunization models
+Solution Report     SOLVE ImmunizationOne Using LP From line 196
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ImmunizationOne     OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  196
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.0069
+
+ RESOURCE USAGE, LIMIT          0.062      1000.000
+ ITERATION COUNT, LIMIT         2    2000000000
+
+IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+Cplex 12.7.1.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.03sec (det. 0.01 ticks)
+Optimal solution found.
+Objective :           0.006892
+
+
+                       LOWER     LEVEL     UPPER    MARGINAL
+
+---- EQU ObjDef          .         .         .        1.000      
+---- EQU PresentVa~ 2.187E+10 2.187E+10 2.187E+10 -5.63E-13      
+---- EQU DurationM~ 2.380E+11 2.380E+11 2.380E+11 8.073E-14      
+
+  ObjDef  Objective function definition
+  PresentValueMatch  Equation matching the present value of asset and liability
+  DurationMatch  Equation matching the duration of asset and liability
+
+---- VAR x  Holdings of bonds (amount of face value)
+
+                LOWER     LEVEL     UPPER    MARGINAL
+
+DK0009923641      .         .        +INF  2.430E-13      
+DK0009923484      .         .        +INF  4.023E-13      
+DK0009921942      .         .        +INF  4.997E-13      
+DK0009922403      .         .        +INF  3.678E-13      
+DK0009922676      .         .        +INF  2.070E-13      
+DK0009922916      .    1.290E+10     +INF       .         
+DK0009918138      .         .        +INF  3.039E-13      
+DK0009923567      .         .        +INF  -6.33E-14      
+DK0009923054      .         .        +INF  6.690E-14      
+DK0009923138      .         .        +INF  6.964E-15      
+DK0009922320      .    5.3148E+9     +INF       .         
+
+                       LOWER     LEVEL     UPPER    MARGINAL
+
+---- VAR z              -INF      0.007     +INF       .         
+
+  z  Objective function value
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 8
+Immunization models
+E x e c u t i o n
+
+
+----    202 VARIABLE x.L  Holdings of bonds (amount of face value)
+
+DK0009922916 1.29010E+10,    DK0009922320 5.314779E+9
+
+
+----    202 PARAMETER Convexity            =      163.851  
+            PARAMETER Conv_Liab            =      164.949  Convexity of liabilit
+                                                           y
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 9
+Immunization models
+Equation Listing    SOLVE ImmunizationTwo Using LP From line 206
+
+
+---- ObjDef  =E=  Objective function definition
+
+ObjDef..  - 2.72497462629434E-13*x(DK0009918138)
+     
+      - 2.37721592727296E-13*x(DK0009923567)
+     
+      - 4.34335076353771E-14*x(DK0009923054)
+     
+      - 1.38733610663362E-13*x(DK0009923138)
+     
+      - 1.29677964538338E-12*x(DK0009922320) + z =E= 0 ; (LHS = 0)
+     
+
+---- PresentValueMatch  =E=  Equation matching the present value of asset and li
+                             ability
+
+PresentValueMatch..  1.00556476694145*x(DK0009923641)
+     
+      + 1.00038786548004*x(DK0009923484) + 1.03533051422275*x(DK0009921942)
+     
+      + 1.11496734116777*x(DK0009922403) + 1.14483662660266*x(DK0009922676)
+     
+      + 1.00207985946194*x(DK0009922916) + 1.53070682794154*x(DK0009918138)
+     
+      + 0.995284334638755*x(DK0009923567) + 1.09963009610746*x(DK0009923054)
+     
+      + 1.1178704465859*x(DK0009923138) + 1.68238814883985*x(DK0009922320) =E= 
+     21869359774.0861 ; (LHS = 21869359774.0861)
+     
+
+---- DurationMatch  =E=  Equation matching the duration of asset and liability
+
+DurationMatch..  4.00732691384854*x(DK0009923641)
+     
+      + 1.9982869556855*x(DK0009923484) + 1.03533051422275*x(DK0009921942)
+     
+      + 3.22544479216512*x(DK0009922403) + 5.42553607252779*x(DK0009922676)
+     
+      + 6.99365380159759*x(DK0009922916) + 10.2945384157861*x(DK0009918138)
+     
+      + 10.6752419549753*x(DK0009923567) + 7.38383245321255*x(DK0009923054)
+     
+      + 9.43405948575158*x(DK0009923138) + 27.8053375493034*x(DK0009922320) =E= 
+     238004388714.801 ; (LHS = 238004388714.801)
+     
+
+---- ConvexityMatch  =G=  Equation matching the convexity of asset and liability
+
+ConvexityMatch..  16.0044208981088*x(DK0009923641)
+     
+      + 3.99408513609642*x(DK0009923484) + 1.03533051422275*x(DK0009921942)
+     
+      + 9.51706072260532*x(DK0009922403) + 26.5303802683086*x(DK0009922676)
+     
+      + 48.8998296374706*x(DK0009922916) + 76.503125908336*x(DK0009918138)
+     
+      + 116.340368982765*x(DK0009923567) + 50.8506225667996*x(DK0009923054)
+     
+      + 82.819055216533*x(DK0009923138) + 555.517591626592*x(DK0009922320) =G= 
+     3607319340276.28 ; (LHS = 3583310031513.08, INFES = 24009308763.1992 ****)
+     
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 10
+Immunization models
+Column Listing      SOLVE ImmunizationTwo Using LP From line 206
+
+
+---- x  Holdings of bonds (amount of face value)
+
+x(DK0009923641)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 2.43041349266203E-13)
+        1.0056  PresentValueMatch
+        4.0073  DurationMatch
+       16.0044  ConvexityMatch
+
+x(DK0009923484)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 4.02308901282272E-13)
+        1.0004  PresentValueMatch
+        1.9983  DurationMatch
+        3.9941  ConvexityMatch
+
+x(DK0009921942)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 4.99732635509367E-13)
+        1.0353  PresentValueMatch
+        1.0353  DurationMatch
+        1.0353  ConvexityMatch
+
+REMAINING 8 ENTRIES SKIPPED
+
+---- z  Objective function value
+
+z
+                (.LO, .L, .UP, .M = -INF, 0.00689209665616121, +INF, 0)
+        1       ObjDef
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 11
+Immunization models
+Model Statistics    SOLVE ImmunizationTwo Using LP From line 206
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS            4
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           12
+NON ZERO ELEMENTS            39
+
+
+GENERATION TIME      =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+
+
+EXECUTION TIME       =        0.031 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 12
+Immunization models
+Solution Report     SOLVE ImmunizationTwo Using LP From line 206
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ImmunizationTwo     OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  206
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.0070
+
+ RESOURCE USAGE, LIMIT          0.093      1000.000
+ ITERATION COUNT, LIMIT         3    2000000000
+
+IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+Cplex 12.7.1.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.06sec (det. 0.02 ticks)
+Optimal solution found.
+Objective :           0.006982
+
+
+                       LOWER     LEVEL     UPPER    MARGINAL
+
+---- EQU ObjDef          .         .         .        1.000      
+---- EQU PresentVa~ 2.187E+10 2.187E+10 2.187E+10 2.629E-14      
+---- EQU DurationM~ 2.380E+11 2.380E+11 2.380E+11 -3.00E-14      
+---- EQU Convexity~ 3.607E+12 3.607E+12     +INF  3.759E-15      
+
+  ObjDef  Objective function definition
+  PresentValueMatch  Equation matching the present value of asset and liability
+  DurationMatch  Equation matching the duration of asset and liability
+  ConvexityMatch  Equation matching the convexity of asset and liability
+
+---- VAR x  Holdings of bonds (amount of face value)
+
+                LOWER     LEVEL     UPPER    MARGINAL
+
+DK0009923641      .         .        +INF  3.382E-14      
+DK0009923484      .         .        +INF  1.873E-14      
+DK0009921942      .    1.8059E+8     +INF       .         
+DK0009922403      .         .        +INF  3.183E-14      
+DK0009922676      .         .        +INF  3.321E-14      
+DK0009922916      .    1.260E+10     +INF       .         
+DK0009918138      .         .        +INF  2.540E-13      
+DK0009923567      .         .        +INF  9.503E-14      
+DK0009923054      .         .        +INF  4.526E-14      
+DK0009923138      .         .        +INF  8.153E-14      
+DK0009922320      .    5.3844E+9     +INF       .         
+
+                       LOWER     LEVEL     UPPER    MARGINAL
+
+---- VAR z              -INF      0.007     +INF       .         
+
+  z  Objective function value
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 13
+Immunization models
+E x e c u t i o n
+
+
+----    212 VARIABLE x.L  Holdings of bonds (amount of face value)
+
+DK0009921942 1.805862E+8,    DK0009922916 1.25976E+10
+DK0009922320 5.384370E+9
+
+
+----    212 EQUATION PresentValueMatch.L   =  2.18694E+10  Equation matching the
+                                                           present value of asse
+                                                           t and liability
+            EQUATION DurationMatch.L       =       10.883  Equation matching the
+                                                           duration of asset and
+                                                           liability
+            EQUATION ConvexityMatch.L      =      164.949  Equation matching the
+                                                           convexity of asset an
+                                                           d liability
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 14
+Immunization models
+Equation Listing    SOLVE ImmunizationThree Using LP From line 221
+
+
+---- ConvexityObj  =E=  
+
+ConvexityObj..  - 7.3181936112611E-10*x(DK0009923641)
+     
+      - 1.82633839186695E-10*x(DK0009923484)
+     
+      - 4.73416014422863E-11*x(DK0009921942)
+     
+      - 4.35177838808179E-10*x(DK0009922403)
+     
+      - 1.21313017584289E-9*x(DK0009922676)
+     
+      - 2.23599731051176E-9*x(DK0009922916)
+     
+      - 3.49818772468079E-9*x(DK0009918138)
+     
+      - 5.31978851619704E-9*x(DK0009923567)
+     
+      - 2.32519941562508E-9*x(DK0009923054)
+     
+      - 3.78699038618719E-9*x(DK0009923138)
+     
+      - 2.54016394336723E-8*x(DK0009922320) + z =E= 0 ;
+     
+      (LHS = -164.941574796926, INFES = 164.941574796926 ****)
+     
+
+---- PresentValueMatch  =E=  Equation matching the present value of asset and li
+                             ability
+
+PresentValueMatch..  1.00556476694145*x(DK0009923641)
+     
+      + 1.00038786548004*x(DK0009923484) + 1.03533051422275*x(DK0009921942)
+     
+      + 1.11496734116777*x(DK0009922403) + 1.14483662660266*x(DK0009922676)
+     
+      + 1.00207985946194*x(DK0009922916) + 1.53070682794154*x(DK0009918138)
+     
+      + 0.995284334638755*x(DK0009923567) + 1.09963009610746*x(DK0009923054)
+     
+      + 1.1178704465859*x(DK0009923138) + 1.68238814883985*x(DK0009922320) =E= 
+     21869359774.0861 ; (LHS = 21869359774.0861)
+     
+
+---- DurationMatch  =E=  Equation matching the duration of asset and liability
+
+DurationMatch..  4.00732691384854*x(DK0009923641)
+     
+      + 1.9982869556855*x(DK0009923484) + 1.03533051422275*x(DK0009921942)
+     
+      + 3.22544479216512*x(DK0009922403) + 5.42553607252779*x(DK0009922676)
+     
+      + 6.99365380159759*x(DK0009922916) + 10.2945384157861*x(DK0009918138)
+     
+      + 10.6752419549753*x(DK0009923567) + 7.38383245321255*x(DK0009923054)
+     
+      + 9.43405948575158*x(DK0009923138) + 27.8053375493034*x(DK0009922320) =E= 
+     238004388714.801 ; (LHS = 238004388714.801)
+     
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 15
+Immunization models
+Column Listing      SOLVE ImmunizationThree Using LP From line 221
+
+
+---- x  Holdings of bonds (amount of face value)
+
+x(DK0009923641)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 3.3820365372961E-14)
+  -7.31819E-10  ConvexityObj
+        1.0056  PresentValueMatch
+        4.0073  DurationMatch
+
+x(DK0009923484)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1.87324207943854E-14)
+  -1.82634E-10  ConvexityObj
+        1.0004  PresentValueMatch
+        1.9983  DurationMatch
+
+x(DK0009921942)
+                (.LO, .L, .UP, .M = 0, 180586220.081321, +INF, 0)
+  -4.73416E-11  ConvexityObj
+        1.0353  PresentValueMatch
+        1.0353  DurationMatch
+
+REMAINING 8 ENTRIES SKIPPED
+
+---- z  Objective function value
+
+z
+                (.LO, .L, .UP, .M = -INF, 0.00698234148385912, +INF, 0)
+        1       ConvexityObj
+
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 16
+Immunization models
+Model Statistics    SOLVE ImmunizationThree Using LP From line 221
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS            3
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           12
+NON ZERO ELEMENTS            34
+
+
+GENERATION TIME      =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+
+
+EXECUTION TIME       =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 17
+Immunization models
+Solution Report     SOLVE ImmunizationThree Using LP From line 221
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ImmunizationThree   OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  221
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              166.8617
+
+ RESOURCE USAGE, LIMIT          0.047      1000.000
+ ITERATION COUNT, LIMIT         1    2000000000
+
+IBM ILOG CPLEX   24.9.1 r63795 Released Aug 30, 2017 WEI x86 64bit/MS Windows 
+Cplex 12.7.1.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.01 ticks)
+Optimal solution found.
+Objective :         166.861671
+
+
+                       LOWER     LEVEL     UPPER    MARGINAL
+
+---- EQU Convexity~      .         .         .        1.000      
+---- EQU PresentVa~ 2.187E+10 2.187E+10 2.187E+10 -6.771E-9      
+---- EQU DurationM~ 2.380E+11 2.380E+11 2.380E+11 1.3232E-9      
+
+  PresentValueMatch  Equation matching the present value of asset and liability
+  DurationMatch  Equation matching the duration of asset and liability
+
+---- VAR x  Holdings of bonds (amount of face value)
+
+                LOWER     LEVEL     UPPER    MARGINAL
+
+DK0009923641      .         .        +INF  2.2376E-9      
+DK0009923484      .         .        +INF  4.3117E-9      
+DK0009921942      .         .        +INF  5.6872E-9      
+DK0009922403      .         .        +INF  3.7163E-9      
+DK0009922676      .         .        +INF  1.7853E-9      
+DK0009922916      .         .        +INF  -2.33E-10      
+DK0009918138      .         .        +INF  2.402E-10      
+DK0009923567      .         .        +INF  -2.067E-9      
+DK0009923054      .    1.144E+10     +INF       .         
+DK0009923138      .         .        +INF  -1.128E-9      
+DK0009922320      .    5.5218E+9     +INF       .         
+
+                       LOWER     LEVEL     UPPER    MARGINAL
+
+---- VAR z              -INF    166.862     +INF       .         
+
+  z  Objective function value
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 24.9.1  r63795 Released Aug 30, 2017 WEX-WEI x86 64bit/MS Windows 10/28/17 20:31:11 Page 18
+Immunization models
+E x e c u t i o n
+
+
+----    223 VARIABLE x.L  Holdings of bonds (amount of face value)
+
+DK0009923054 1.14399E+10,    DK0009922320 5.521758E+9
+
+
+
+EXECUTION TIME       =        0.016 SECONDS      3 MB  24.9.1 r63795 WEX-WEI
+
+
+USER: Course License Fall 2017                       A170809:0923AO-GEN
+      Technical University of Denmark, Management Engineering    DC8756
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\khoongwh\Desktop\Wei Hao\NUS\Applied Mathematics Major\Modul
+           es\Year 3 Semester 1 (On Exchange)\42123 Optimization in Finance (ST4
+           245 Statistical Methods for Finance)\Projects\Project_Immunization.gm
+           s
+Output     C:\Users\khoongwh\Documents\gamsdir\projdir\Project_Immunization.lst
